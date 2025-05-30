@@ -1,5 +1,5 @@
 export * from './constants.ts';
-export * from './vite-defaults-config.ts';
+export * from './vite-config-defaults.ts';
 
 export * from './http/http.exports.ts';
 export * from './injector/injector.exports.ts';

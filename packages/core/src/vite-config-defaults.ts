@@ -1,24 +1,23 @@
 import { builtinModules } from 'node:module';
-import { readFile } from 'node:fs/promises';
 import swc from 'vite-plugin-swc-transform';
 
-export async function viteDefaultsConfig() {
-  const dependencies =
-    JSON.parse(
-      await readFile(new URL('./package.json', import.meta.url), 'utf-8'),
-    ).dependencies || {};
-
+export function viteConfigDefaults(packageData: {
+  dependencies?: Record<string, string>;
+}) {
   return {
     build: {
+      assetsDir: './',
       target: 'esnext',
       sourcemap: true,
       lib: {
         entry: './src/main.ts',
         formats: ['es'],
       },
+      outDir: './build',
       rollupOptions: {
         external: [
-          ...Object.keys(dependencies),
+          ...Object.keys(packageData.dependencies || {}),
+          ...builtinModules.map((moduleName) => moduleName),
           ...builtinModules.map((moduleName) => `node:${moduleName}`),
         ],
         output: {
@@ -28,20 +27,11 @@ export async function viteDefaultsConfig() {
           entryFileNames: '[name].js',
         },
       },
-      outDir: './build',
-      assetsDir: './',
     },
     plugins: [
       swc({
         swcOptions: {
-          minify: true,
           jsc: {
-            minify: {
-              compress: {
-                unused: true,
-              },
-              mangle: true,
-            },
             parser: {
               syntax: 'typescript',
               decorators: true,

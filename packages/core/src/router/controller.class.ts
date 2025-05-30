@@ -13,7 +13,7 @@ export abstract class Controller {
         return String(data[key]);
       }
 
-      throw new Error(`Missing variable '${key}' in view ${view}`);
+      throw new Error(`Missing variable "${key}" in view ${view}`);
     });
   }
 }

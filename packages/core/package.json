@@ -3,7 +3,8 @@
   "version": "1.0.0-alpha",
   "description": "SwayKit Core backend development framework",
   "exports": {
-    ".": "./build/exports.js"
+    ".": "./build/exports.js",
+    "./vite": "./build/vite-config-defaults.js"
   },
   "engines": {
     "node": ">=24.0.0"

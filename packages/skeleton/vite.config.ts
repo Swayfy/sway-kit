@@ -1,7 +1,8 @@
+import packageData from './package.json' with { type: 'json' };
 import { defineConfig } from 'vite';
-import { viteDefaultsConfig } from '@sway-kit/core';
+import { viteConfigDefaults } from '@sway-kit/core/vite';
 
 export default defineConfig({
   logLevel: 'error',
-  ...(await viteDefaultsConfig()),
+  ...viteConfigDefaults(packageData),
 });

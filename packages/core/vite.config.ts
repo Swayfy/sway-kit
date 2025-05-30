@@ -6,12 +6,14 @@ import swc from 'vite-plugin-swc-transform';
 export default defineConfig({
   logLevel: 'error',
   build: {
+    assetsDir: './',
     target: 'esnext',
     sourcemap: true,
     lib: {
       entry: './src/exports.ts',
       formats: ['es'],
     },
+    outDir: './build',
     rollupOptions: {
       external: [
         ...Object.keys(packageData.devDependencies || {}),
@@ -25,20 +27,11 @@ export default defineConfig({
         entryFileNames: '[name].js',
       },
     },
-    outDir: './build',
-    assetsDir: './',
   },
   plugins: [
     swc({
       swcOptions: {
-        minify: true,
         jsc: {
-          minify: {
-            compress: {
-              unused: true,
-            },
-            mangle: true,
-          },
           parser: {
             syntax: 'typescript',
             decorators: true,

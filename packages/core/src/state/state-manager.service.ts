@@ -1,15 +1,10 @@
 import { AppConfig } from './interfaces/app-config.interface.ts';
 import { DeepPartial } from '../utils/types/deep-partial.type.ts';
 import { EnvVariable } from '../utils/types/env-variable.type.ts';
-import { Inject } from '../injector/decorators/inject.decorator.ts';
-import { Logger } from '../logger/logger.service.ts';
 import { Utils } from '../utils/utils.class.ts';
 
-@Inject([Logger])
 export class StateManager {
   private configuration?: AppConfig;
-
-  constructor(private readonly logger: Logger) {}
 
   private validateConfiguration(): void {
     if (this.state.encryption.key.length < 16) {
@@ -50,12 +45,6 @@ export class StateManager {
 
   public get state(): AppConfig {
     if (!this.configuration) {
-      if (!this.getEnv<string>('ENCRYPTION_KEY')) {
-        this.logger.warn(
-          'No encryption key found in environment variables. A random UUID will be used.',
-        );
-      }
-
       this.configuration = {
         encryption: {
           key: this.getEnv<string>('ENCRYPTION_KEY') ?? crypto.randomUUID(),
