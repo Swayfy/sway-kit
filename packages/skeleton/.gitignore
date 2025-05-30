@@ -1,0 +1,11 @@
+.DS_Store
+.env*
+!.env.example
+.idea
+*.log
+.npm
+.pnp.*
+.vscode
+.yarn
+build
+node_modules

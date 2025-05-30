@@ -1,6 +1,5 @@
 {
   "name": "sway-kit",
-  "version": "1.0.0",
   "description": "SwayKit development tools",
   "main": "index.js",
   "repository": "https://github.com/Swayfy/sway-kit.git",

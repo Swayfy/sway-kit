@@ -6,5 +6,21 @@
   "repository": "https://github.com/Swayfy/sway-kit.git",
   "author": "Swayfy",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "concurrently -r \"vite build --watch\" \"wait-on ./build/main.js && node --env-file .env --watch ./build/main.js\"",
+    "format": "prettier --write .",
+    "prod": "node --env-file .env --watch ./build/main.js"
+  },
+  "dependencies": {
+    "@sway-kit/core": "^1.0.0-alpha"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.28",
+    "concurrently": "^9.1.2",
+    "prettier": "^3.5.3",
+    "vite": "^6.3.5",
+    "wait-on": "^8.0.3"
+  }
 }
