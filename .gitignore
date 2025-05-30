@@ -1,0 +1,8 @@
+.DS_Store
+.idea
+*.log
+.npm
+.pnp.*
+.yarn
+.vscode
+node_modules

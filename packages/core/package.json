@@ -1,0 +1,9 @@
+{
+  "name": "@sway-kit/core",
+  "version": "1.0.0-alpha",
+  "description": "SwayKit Core backend development framework",
+  "main": "./build/main.js",
+  "repository": "https://github.com/Swayfy/sway-kit.git",
+  "author": "Swayfy",
+  "license": "MIT"
+}
