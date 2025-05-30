@@ -1,3 +1,4 @@
+import packageData from './package.json' with { type: 'json' };
 import { builtinModules } from 'node:module';
 import { defineConfig } from 'vite';
 import swc from 'vite-plugin-swc-transform';
@@ -9,11 +10,11 @@ export default defineConfig({
     sourcemap: true,
     lib: {
       entry: './src/exports.ts',
-      formats: ['es']
+      formats: ['es'],
     },
     rollupOptions: {
       external: [
-        'chalk',
+        ...Object.keys(packageData.dependencies || {}),
         ...builtinModules.map((moduleName) => `node:${moduleName}`),
       ],
       output: {
