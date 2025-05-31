@@ -7,13 +7,20 @@
 }
 
 .container {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.logo {
+  width: 132px;
 }
 
 .message {
   font-family: monospace;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   color: #333;
   text-align: center;
 }
