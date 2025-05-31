@@ -447,6 +447,19 @@ export class Router {
       throw new HttpError(HttpStatus.NotFound);
     } catch (error) {
       if (error instanceof HttpError) {
+        if (request.isAjaxRequest()) {
+          return await this.createResponse(
+            request,
+            {
+              error: error.message,
+              statusCode: error.statusCode,
+            },
+            {
+              statusCode: error.statusCode,
+            },
+          );
+        }
+
         if (this.httpErrorHandler) {
           const content = this.httpErrorHandler(
             error.statusCode,
