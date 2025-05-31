@@ -1,12 +1,12 @@
 import packageData from './package.json' with { type: 'json' };
 import { builtinModules } from 'node:module';
 import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
 import swc from 'vite-plugin-swc-transform';
 
 export default defineConfig({
   logLevel: 'error',
   build: {
-    assetsDir: './',
     target: 'esnext',
     sourcemap: true,
     lib: {
@@ -29,6 +29,10 @@ export default defineConfig({
     },
   },
   plugins: [
+    dts({
+      include: ['./src/**/*.ts'],
+      rollupTypes: true,
+    }),
     swc({
       swcOptions: {
         jsc: {

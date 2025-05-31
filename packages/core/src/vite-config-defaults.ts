@@ -1,12 +1,14 @@
 import { builtinModules } from 'node:module';
+import { UserConfig } from 'vite';
 import swc from 'vite-plugin-swc-transform';
 
-export function viteConfigDefaults(packageData: {
-  dependencies?: Record<string, string>;
-}) {
+export function viteConfigDefaults(
+  packageData: object & {
+    dependencies?: Record<string, string>;
+  },
+): Partial<UserConfig> {
   return {
     build: {
-      assetsDir: './',
       target: 'esnext',
       sourcemap: true,
       lib: {
@@ -28,6 +30,7 @@ export function viteConfigDefaults(packageData: {
         },
       },
     },
+    publicDir: false,
     plugins: [
       swc({
         swcOptions: {

@@ -4,9 +4,16 @@
   "description": "SwayKit Core backend development framework",
   "type": "module",
   "exports": {
-    ".": "./build/exports.js",
-    "./vite": "./build/vite-config-defaults.js"
+    ".": {
+      "import": "./build/exports.js",
+      "types": "./build/index.d.ts"
+    },
+    "./vite": {
+      "import": "./build/vite-config-defaults.js",
+      "types": "./build/index.d.ts"
+    }
   },
+  "types": "./build/index.d.ts",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -23,6 +30,7 @@
     "@types/node": "^22.15.28",
     "prettier": "^3.5.3",
     "vite": "^6.3.5",
+    "vite-plugin-dts": "^4.5.4",
     "vite-plugin-swc-transform": "^1.1.0"
   },
   "dependencies": {

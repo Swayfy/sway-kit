@@ -67,13 +67,13 @@ export class StateManager {
     let current = this.state;
 
     for (let i = 0; i < keys.length - 1; i++) {
-      if (!current[keys[i]]) {
-        current[keys[i]] = {};
+      if (!current[keys[i] as keyof AppConfig]) {
+        (current[keys[i] as keyof AppConfig] as unknown) = {};
       }
 
-      current = current[keys[i]];
+      (current as unknown) = current[keys[i] as keyof AppConfig];
     }
 
-    current[keys[keys.length - 1]] = value;
+    (current[keys[keys.length - 1] as keyof AppConfig] as unknown) = value;
   }
 }
