@@ -232,30 +232,6 @@ export class Router {
         break;
       }
 
-      // case body instanceof View: {
-      //   const template = await (body as View).getTemplate();
-      //   const compiledTemplate = await inject(TemplateCompiler).render(
-      //     template,
-      //     (body as View).variables,
-      //     {
-      //       file: (body as View).file,
-      //       request,
-      //       ...(body as View).options,
-      //     },
-      //   );
-
-      //   body = compiledTemplate;
-
-      //   break;
-      // }
-
-      // case body instanceof Json: {
-      //   body = JSON.stringify((body as Json).json);
-      //   contentType = 'application/json';
-
-      //   break;
-      // }
-
       case Array.isArray(body) ||
         (typeof body === 'object' &&
           body !== null &&
@@ -382,10 +358,14 @@ export class Router {
       );
 
       if (handler) {
-        this.httpErrorHandler = async (statusCode: HttpStatus) => {
+        this.httpErrorHandler = async (
+          statusCode: HttpStatus,
+          message: string,
+        ) => {
           const methodResult = controllerMethodRef.call(
             controllerInstance,
             statusCode,
+            message,
           );
 
           return methodResult instanceof Promise
