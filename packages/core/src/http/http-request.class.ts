@@ -89,10 +89,10 @@ export class HttpRequest {
   }
 
   public path(): RoutePath {
-    return (this.request.url ?? '/') as RoutePath;
+    return new URL(this.url()).pathname as RoutePath;
   }
 
   public url(): string {
-    return resolve(Router).baseUrl() + this.path();
+    return resolve(Router).baseUrl() + (this.request.url ?? '/');
   }
 }

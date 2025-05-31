@@ -1,6 +1,6 @@
 import http from 'node:http';
 import net from 'node:net';
-import chalk from 'chalk';
+import chalk, { ChalkInstance } from 'chalk';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { HttpRequest } from '../http/http-request.class.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
@@ -52,14 +52,46 @@ export class Server implements Disposable {
   ): Promise<void> {
     const richRequest = new HttpRequest(request);
 
-    if (!(await richRequest.isStaticFileRequest())) {
-      this.logger.info(
-        `HTTP route request: ${chalk.bold(request.method ?? HttpMethod.Get)} ${chalk.bold(request.url ?? HttpMethod.Get)}`,
-      );
-    }
-
     const { content, headers, statusCode } =
       await this.router.respond(richRequest);
+
+    if (
+      !(await richRequest.isStaticFileRequest()) ||
+      (this.stateManager.state.logger.staticFileRequests &&
+        (await richRequest.isStaticFileRequest()))
+    ) {
+      let statusColor: ChalkInstance = chalk.blue;
+
+      switch (true) {
+        case statusCode >= 100 && statusCode < 200: {
+          statusColor = chalk.blue;
+
+          break;
+        }
+
+        case statusCode >= 200 && statusCode < 400: {
+          statusColor = chalk.green;
+
+          break;
+        }
+
+        case statusCode >= 400 && statusCode < 500: {
+          statusColor = chalk.hex('#d19a90');
+
+          break;
+        }
+
+        case statusCode >= 500 && statusCode < 600: {
+          statusColor = chalk.red;
+
+          break;
+        }
+      }
+
+      this.logger.info(
+        `${statusColor(`[${statusCode}]`)} ${chalk.bold(request.method ?? HttpMethod.Get)} ${chalk.bold(request.url ?? HttpMethod.Get)}`,
+      );
+    }
 
     headers.forEach((value, key) => {
       if (Array.isArray(value)) {
