@@ -1,10 +1,15 @@
 import fs from 'node:fs/promises';
-import { join, join as joinPath } from 'node:path';
+import { join as joinPath } from 'node:path';
 import { IncomingHttpHeaders, IncomingMessage } from 'node:http';
+import { Encrypter } from '../encrypter/encrypter.service.ts';
 import { HttpMethod } from './enums/http-method.enum.ts';
+import { resolve } from '../injector/functions/resolve.function.ts';
 import { RoutePath } from '../router/types/route-path.type.ts';
+import { StateManager } from '../state/state-manager.service.ts';
 
 export class HttpRequest {
+  private readonly cspNonce = resolve(Encrypter).generateRandomString(24);
+
   private readonly request: IncomingMessage;
 
   constructor(request: IncomingMessage) {
@@ -52,12 +57,17 @@ export class HttpRequest {
   }
 
   public async isStaticFileRequest(): Promise<boolean> {
-    if (this.path() === '/') {
+    if (this.method() !== HttpMethod.Get || this.path() === '/') {
       return false;
     }
 
     try {
-      await fs.stat(joinPath('public', this.path().slice(1)));
+      await fs.stat(
+        joinPath(
+          resolve(StateManager).state.staticFilesDirectory,
+          this.path().slice(1),
+        ),
+      );
 
       return true;
     } catch {
@@ -73,8 +83,12 @@ export class HttpRequest {
     );
   }
 
-  public path(): RoutePath {
-    return new URL(this.request.url ?? '/').pathname as RoutePath;
+  public get nonce(): string {
+    return this.cspNonce;
+  }
+
+  public path(): RoutePath {console.log(this.request.url)
+    return (this.request.url ?? '/') as RoutePath;
   }
 
   public url(): string {

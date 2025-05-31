@@ -1,9 +1,11 @@
 import { HttpStatus } from './enums/http-status.enum.ts';
 
 export class HttpResponse {
+  private headersBag: Record<string, string | string[]> = {};
+
   constructor(
-    public readonly content: string | Buffer,
-    public readonly headers: Record<string, string | string[]> = {},
-    public readonly statusCode: HttpStatus,
+    public readonly content: string | Buffer | ReadableStream | null = null,
+    public readonly headers: Headers = new Headers(),
+    public readonly statusCode: HttpStatus = HttpStatus.Ok,
   ) {}
 }

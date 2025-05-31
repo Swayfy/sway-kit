@@ -46,6 +46,26 @@ export class StateManager {
   public get state(): AppConfig {
     if (!this.configuration) {
       this.configuration = {
+        cache: {
+          enabled: true,
+          maxAge: 0,
+        },
+        contentSecurityPolicy: {
+          allowInlineScripts: false,
+          allowInlineStyles: true,
+          allowedOrigins: [],
+        },
+        cookies: {
+          maxAge: this.getEnv<number>('COOKIE_MAX_AGE') ?? 30,
+        },
+        cors: {
+          allowCredentials: false,
+          allowedHeaders: [],
+          allowedMethods: ['*'],
+          allowedOrigins: ['*'],
+          exposedHeaders: [],
+          maxAge: 0,
+        },
         encryption: {
           key: this.getEnv<string>('ENCRYPTION_KEY') ?? crypto.randomUUID(),
         },
@@ -53,6 +73,16 @@ export class StateManager {
         isProduction: this.getEnv<boolean>('PRODUCTION') ?? false,
         logger: {
           enabled: true,
+          staticFileRequests: false,
+        },
+        poweredByHeader: false,
+        staticFilesDirectory: 'public',
+        tls: {
+          cert: this.getEnv<string>('TLS_CERT') ?? false,
+          certFile: false,
+          enabled: false,
+          key: this.getEnv<string>('TLS_KEY') ?? false,
+          keyFile: false,
         },
         port: this.getEnv<number>('PORT') ?? 5050,
       };

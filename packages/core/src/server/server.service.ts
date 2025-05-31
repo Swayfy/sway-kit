@@ -61,7 +61,17 @@ export class Server implements Disposable {
     const { content, headers, statusCode } =
       await this.router.respond(richRequest);
 
-    response.writeHead(statusCode, headers);
+    headers.forEach((value, key) => {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          response.setHeader(key, item);
+        }
+      } else {
+        response.setHeader(key, value);
+      }
+    });
+
+    response.statusCode = statusCode;
 
     response.end(content);
   }

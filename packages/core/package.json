@@ -27,13 +27,16 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^22.15.28",
     "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-dts": "^4.5.4",
     "vite-plugin-swc-transform": "^1.1.0"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "chalk": "^5.4.1"
   }
 }
