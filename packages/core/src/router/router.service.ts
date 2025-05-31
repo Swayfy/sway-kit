@@ -207,7 +207,7 @@ export class Router {
   private async parseResponseBody(
     request: HttpRequest,
     body: unknown,
-  ): Promise<{ body: string | null | ReadableStream; contentType: string }> {
+  ): Promise<{ body: string | null | Buffer | Uint8Array; contentType: string }> {
     let contentType = 'text/html';
 
     if (body instanceof Promise) {
@@ -263,7 +263,7 @@ export class Router {
         break;
       }
 
-      case body instanceof ReadableStream || body instanceof Uint8Array: {
+      case body instanceof Buffer || body instanceof Uint8Array: {
         contentType = 'application/octet-stream';
 
         break;
@@ -275,7 +275,7 @@ export class Router {
     }
 
     return {
-      body: body as string | null | ReadableStream,
+      body: body as string | null | Buffer | Uint8Array,
       contentType,
     };
   }
