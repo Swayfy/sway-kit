@@ -9,9 +9,9 @@ export class RootController extends Controller {
   }
 
   @Route.Error()
-  public async error(status: HttpStatus, message: string) {
+  public async error(statusCode: HttpStatus, message: string) {
     return await this.render('error', {
-      status,
+      statusCode,
       message,
     });
   }

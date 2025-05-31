@@ -19,7 +19,7 @@
 }
 
 .message {
-  font-family: monospace;
+  font-family: 'Roboto Mono', monospace;
   font-size: 1.8rem;
   color: #333;
   text-align: center;
