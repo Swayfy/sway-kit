@@ -5,6 +5,7 @@ import { Encrypter } from '../encrypter/encrypter.service.ts';
 import { HttpMethod } from './enums/http-method.enum.ts';
 import { resolve } from '../injector/functions/resolve.function.ts';
 import { RoutePath } from '../router/types/route-path.type.ts';
+import { Router } from '../router/router.service.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 
 export class HttpRequest {
@@ -87,11 +88,11 @@ export class HttpRequest {
     return this.cspNonce;
   }
 
-  public path(): RoutePath {console.log(this.request.url)
+  public path(): RoutePath {
     return (this.request.url ?? '/') as RoutePath;
   }
 
   public url(): string {
-    return this.request.url ?? '/';
+    return resolve(Router).baseUrl() + this.path();
   }
 }

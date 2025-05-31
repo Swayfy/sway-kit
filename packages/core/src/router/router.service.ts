@@ -38,10 +38,10 @@ type RouteDecoratorFunction<THttpMethods> =
 
 @Inject([Logger, StateManager])
 export class Router {
-  private readonly httpErrorHandlers = new Map<
-    HttpStatus | undefined,
-    (statusCode: HttpStatus) => unknown
-  >();
+  private httpErrorHandler?: (
+    statusCode: HttpStatus,
+    message: string,
+  ) => unknown;
 
   constructor(
     private readonly logger: Logger,
@@ -207,7 +207,10 @@ export class Router {
   private async parseResponseBody(
     request: HttpRequest,
     body: unknown,
-  ): Promise<{ body: string | null | Buffer | Uint8Array; contentType: string }> {
+  ): Promise<{
+    body: string | null | Buffer | Uint8Array;
+    contentType: string;
+  }> {
     let contentType = 'text/html';
 
     if (body instanceof Promise) {
@@ -379,19 +382,16 @@ export class Router {
       );
 
       if (handler) {
-        this.httpErrorHandlers.set(
-          handler.statusCode,
-          async (statusCode: HttpStatus) => {
-            const methodResult = controllerMethodRef.call(
-              controllerInstance,
-              statusCode,
-            );
+        this.httpErrorHandler = async (statusCode: HttpStatus) => {
+          const methodResult = controllerMethodRef.call(
+            controllerInstance,
+            statusCode,
+          );
 
-            return methodResult instanceof Promise
-              ? await methodResult
-              : methodResult;
-          },
-        );
+          return methodResult instanceof Promise
+            ? await methodResult
+            : methodResult;
+        };
 
         continue;
       }
@@ -437,9 +437,9 @@ export class Router {
         });
 
         for (const method of route.methods) {
-          if (requestMethod === method && urlPattern.test(request.url())) {
+          if (requestMethod === method && urlPattern.test(request.path())) {
             const paramGroups =
-              urlPattern.exec(request.url())?.pathname.groups ?? {};
+              urlPattern.exec(request.path())?.pathname.groups ?? {};
 
             for (const [paramName, paramValue] of Object.entries(paramGroups)) {
               if (paramValue === '') {
@@ -467,22 +467,29 @@ export class Router {
       throw new HttpError(HttpStatus.NotFound);
     } catch (error) {
       if (error instanceof HttpError) {
-        const handler = this.httpErrorHandlers.get(error.statusCode);
+        if (this.httpErrorHandler) {
+          const content = this.httpErrorHandler(
+            error.statusCode,
+            error.message,
+          );
 
-        if (handler) {
-          return await this.createResponse(request, error, {
-            statusCode: error.statusCode,
-          });
+          return await this.createResponse(
+            request,
+            content instanceof Promise ? await content : content,
+            {
+              statusCode: error.statusCode,
+            },
+          );
         }
 
-        return await this.createResponse(request, error, {
+        return await this.createResponse(request, null, {
           statusCode: error.statusCode,
         });
       }
 
       this.logger.error(`Error: ${(error as Error).message}`);
 
-      return await this.createResponse(request, error, {
+      return await this.createResponse(request, (error as Error).message, {
         statusCode: HttpStatus.InternalServerError,
       });
     }
