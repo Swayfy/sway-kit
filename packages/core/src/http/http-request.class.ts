@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { join, join as joinPath } from 'node:path';
 import { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import { HttpMethod } from './enums/http-method.enum.ts';
 import { RoutePath } from '../router/types/route-path.type.ts';
@@ -56,7 +57,7 @@ export class HttpRequest {
     }
 
     try {
-      await fs.stat(`public${this.path()}`);
+      await fs.stat(joinPath('public', this.path().slice(1)));
 
       return true;
     } catch {

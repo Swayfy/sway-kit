@@ -11,6 +11,7 @@ import { resolve } from '../injector/functions/resolve.function.ts';
 import { Router } from '../router/router.service.ts';
 import { ServerOptions } from './interfaces/server-options.interface.ts';
 import { StateManager } from '../state/state-manager.service.ts';
+import { HttpMethod } from '../http/enums/http-method.enum.ts';
 
 @Inject([Logger, Router, StateManager])
 export class Server implements Disposable {
@@ -49,9 +50,16 @@ export class Server implements Disposable {
     request: http.IncomingMessage,
     response: http.ServerResponse,
   ): Promise<void> {
-    const { content, headers, statusCode } = await this.router.respond(
-      new HttpRequest(request),
-    );
+    const richRequest = new HttpRequest(request);
+
+    if (!(await richRequest.isStaticFileRequest())) {
+      this.logger.info(
+        `HTTP route request: ${chalk.bold(request.method ?? HttpMethod.Get)} ${chalk.bold(request.url ?? HttpMethod.Get)}`,
+      );
+    }
+
+    const { content, headers, statusCode } =
+      await this.router.respond(richRequest);
 
     response.writeHead(statusCode, headers);
 
