@@ -1,7 +1,6 @@
 <div align="center">
-  <br>
   <img src="./.github/assets/logo-color.png" height="160" alt="Logo">
-  <br>
+  <h3>SwayKit</h3>
   <p align="center">
     Modern and declarative backend development tools for Node.js.
   </p>
