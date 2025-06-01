@@ -43,15 +43,9 @@ export const Unlock = router.createRouteDecorator([HttpMethod.Unlock]);
 
 export const Methods = router.createRouteDecorator();
 
-export function Error(statusCode?: HttpStatus): MethodDecorator {
+export function Error(): MethodDecorator {
   return (originalMethod) => {
-    Reflector.defineMetadata<{ statusCode?: HttpStatus }>(
-      'httpErrorHandler',
-      {
-        statusCode,
-      },
-      originalMethod,
-    );
+    Reflector.defineMetadata<boolean>('httpErrorHandler', true, originalMethod);
 
     return originalMethod;
   };

@@ -398,7 +398,7 @@ export class Router {
         controllerRouteMethod
       ] as (...args: unknown[]) => unknown;
 
-      const handler = Reflector.getMetadata<{ statusCode?: HttpStatus }>(
+      const handler = Reflector.getMetadata<boolean>(
         'httpErrorHandler',
         controllerMethodRef,
       );
