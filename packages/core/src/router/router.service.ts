@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises';
-import { join as joinPath } from 'node:path';
+import path from 'node:path';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { CONTENT_TYPES } from './constants.ts';
 import { Controller } from './controller.class.ts';
@@ -21,6 +21,7 @@ import { StateManager } from '../state/state-manager.service.ts';
 import { Url } from './types/url.type.ts';
 import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
 import { JsonResponse } from '../http/json-response.class.ts';
+import { ViewResponse } from '../http/view-response.class.ts';
 
 interface ResponseOptions {
   cookies?: Record<string, string>;
@@ -185,7 +186,7 @@ export class Router {
   private async createStaticFileResponse(
     request: HttpRequest,
   ): Promise<HttpResponse> {
-    const filePath = joinPath(
+    const filePath = path.join(
       this.stateManager.state.staticFilesDirectory,
       ...request.path().split('/'),
     );
@@ -254,6 +255,30 @@ export class Router {
 
         if ((body as JsonResponse).statusCode) {
           statusCode = (body as JsonResponse).statusCode;
+        }
+
+        break;
+      }
+
+      case body instanceof ViewResponse: {
+        const viewName = (body as ViewResponse).name;
+        const rendered = await fs.readFile(
+          path.join('views', `${viewName.replaceAll(/[/\\]/g, path.sep)}.html`),
+          'utf-8',
+        );
+
+        body = rendered.replaceAll(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_, key) => {
+          if (key in (body as ViewResponse).data) {
+            return String((body as ViewResponse).data[key]);
+          }
+
+          throw new Error(`Missing variable "${key}" in view ${viewName}`);
+        });
+
+        contentType = 'text/html';
+
+        if ((body as ViewResponse).statusCode) {
+          statusCode = (body as ViewResponse).statusCode;
         }
 
         break;
