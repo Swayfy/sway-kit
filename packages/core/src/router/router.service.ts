@@ -227,74 +227,79 @@ export class Router {
       statusCode = (body as Response).statusCode;
     }
 
-    switch (true) {
-      case ['bigint', 'boolean', 'number', 'string', 'symbol'].includes(
-        typeof body,
-      ): {
-        body = String(body);
+    if (body !== null) {
+      switch (true) {
+        case ['bigint', 'boolean', 'number', 'string', 'symbol'].includes(
+          typeof body,
+        ): {
+          body = String(body);
 
-        break;
-      }
-
-      case typeof body === 'undefined': {
-        body = null;
-
-        break;
-      }
-
-      case Array.isArray(body) ||
-        (typeof body === 'object' &&
-          body !== null &&
-          (body as Record<string, unknown>).constructor === Object): {
-        body = JSON.stringify(body);
-        contentType = 'application/json';
-
-        break;
-      }
-
-      case body instanceof JsonResponse: {
-        body = JSON.stringify((body as JsonResponse).content);
-        contentType = 'application/json';
-
-        if ((body as JsonResponse).statusCode) {
-          statusCode = (body as JsonResponse).statusCode;
+          break;
         }
 
-        break;
-      }
+        case typeof body === 'undefined': {
+          body = null;
 
-      case body instanceof ViewResponse: {
-        const viewName = (body as ViewResponse).name;
-        const rendered = await fs.readFile(
-          path.join('views', `${viewName.replaceAll(/[/\\]/g, path.sep)}.html`),
-          'utf-8',
-        );
+          break;
+        }
 
-        body = rendered.replaceAll(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_, key) => {
-          if (key in (body as ViewResponse).data) {
-            return String((body as ViewResponse).data[key]);
+        case Array.isArray(body) ||
+          (typeof body === 'object' &&
+            body !== null &&
+            (body as Record<string, unknown>).constructor === Object): {
+          body = JSON.stringify(body);
+          contentType = 'application/json';
+
+          break;
+        }
+
+        case body instanceof JsonResponse: {
+          body = JSON.stringify((body as JsonResponse).content);
+          contentType = 'application/json';
+
+          if ((body as JsonResponse).statusCode) {
+            statusCode = (body as JsonResponse).statusCode;
           }
 
-          throw new Error(`Missing variable "${key}" in view ${viewName}`);
-        });
-
-        contentType = 'text/html';
-
-        if ((body as ViewResponse).statusCode) {
-          statusCode = (body as ViewResponse).statusCode;
+          break;
         }
 
-        break;
-      }
+        case body instanceof ViewResponse: {
+          const viewName = (body as ViewResponse).name;
+          const rendered = await fs.readFile(
+            path.join(
+              'views',
+              `${viewName.replaceAll(/[/\\]/g, path.sep)}.html`,
+            ),
+            'utf-8',
+          );
 
-      case body instanceof Buffer || body instanceof Uint8Array: {
-        contentType = 'application/octet-stream';
+          body = rendered.replaceAll(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_, key) => {
+            if (key in (body as ViewResponse).data) {
+              return String((body as ViewResponse).data[key]);
+            }
 
-        break;
-      }
+            throw new Error(`Missing variable "${key}" in view ${viewName}`);
+          });
 
-      default: {
-        throw new Error('Invalid response type');
+          contentType = 'text/html';
+
+          if ((body as ViewResponse).statusCode) {
+            statusCode = (body as ViewResponse).statusCode;
+          }
+
+          break;
+        }
+
+        case body instanceof Buffer || body instanceof Uint8Array: {
+          contentType = 'application/octet-stream';
+
+          break;
+        }
+
+        default: {
+          throw new Error('Invalid response type');
+        }
       }
     }
 
