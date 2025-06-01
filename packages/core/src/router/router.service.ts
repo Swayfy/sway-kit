@@ -5,14 +5,14 @@ import { CONTENT_TYPES } from './constants.ts';
 import { Controller } from './controller.class.ts';
 import { HttpError } from '../http/http-error.class.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
-import { HttpRequest } from '../http/http-request.class.ts';
-import { HttpResponse } from '../http/http-response.class.ts';
 import { HttpStatus } from '../http/enums/http-status.enum.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';
 import { EnumValuesUnion } from '../utils/types/enum-values-union.type.ts';
 import { MethodDecorator } from '../utils/types/method-decorator.type.ts';
 import { Reflector } from '../utils/reflector.class.ts';
+import { Request } from '../http/request.class.ts';
+import { Response } from '../http/response.class.ts';
 import { resolve } from '../injector/functions/resolve.function.ts';
 import { Route } from './interfaces/route.interface.ts';
 import { RouteOptions } from './interfaces/route-options.interface.ts';
@@ -53,14 +53,14 @@ export class Router {
   private readonly routes: Route[] = [];
 
   private async createResponse(
-    request: HttpRequest,
+    request: Request,
     body: unknown,
     {
       cookies = {},
       headers = {},
       statusCode = HttpStatus.Ok,
     }: ResponseOptions = {},
-  ): Promise<HttpResponse> {
+  ): Promise<Response> {
     const cspDirectives = ` ${this.stateManager.state.contentSecurityPolicy.allowedOrigins.join(
       ' ',
     )} ${
@@ -159,7 +159,7 @@ export class Router {
           : 'no-cache',
     };
 
-    const response = new HttpResponse(
+    const response = new Response(
       parsedBody,
       new Headers({
         ...baseHeaders,
@@ -183,9 +183,7 @@ export class Router {
     return response;
   }
 
-  private async createStaticFileResponse(
-    request: HttpRequest,
-  ): Promise<HttpResponse> {
+  private async createStaticFileResponse(request: Request): Promise<Response> {
     const filePath = path.join(
       this.stateManager.state.staticFilesDirectory,
       ...request.path().split('/'),
@@ -210,7 +208,7 @@ export class Router {
   }
 
   private async parseResponseBody(
-    request: HttpRequest,
+    request: Request,
     body: unknown,
     statusCode?: HttpStatus,
   ): Promise<{
@@ -222,6 +220,11 @@ export class Router {
 
     if (body instanceof Promise) {
       body = await body;
+    }
+
+    if (body instanceof Response) {
+      body = (body as Response).content;
+      statusCode = (body as Response).statusCode;
     }
 
     switch (true) {
@@ -445,7 +448,7 @@ export class Router {
     }
   }
 
-  public async respond(request: HttpRequest): Promise<HttpResponse> {
+  public async respond(request: Request): Promise<Response> {
     try {
       const requestMethod = request.method();
 

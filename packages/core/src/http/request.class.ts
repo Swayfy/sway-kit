@@ -8,7 +8,7 @@ import { RoutePath } from '../router/types/route-path.type.ts';
 import { Router } from '../router/router.service.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 
-export class HttpRequest {
+export class Request {
   private readonly cspNonce = resolve(Encrypter).generateRandomString(24);
 
   private readonly request: IncomingMessage;

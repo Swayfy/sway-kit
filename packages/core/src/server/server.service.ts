@@ -2,11 +2,11 @@ import http from 'node:http';
 import net from 'node:net';
 import chalk, { ChalkInstance } from 'chalk';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
-import { HttpRequest } from '../http/http-request.class.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';
 import { Module } from './interfaces/module.interface.ts';
 import { Plugin } from './interfaces/plugin.interface.ts';
+import { Request } from '../http/request.class.ts';
 import { resolve } from '../injector/functions/resolve.function.ts';
 import { Router } from '../router/router.service.ts';
 import { ServerOptions } from './interfaces/server-options.interface.ts';
@@ -50,7 +50,7 @@ export class Server implements Disposable {
     request: http.IncomingMessage,
     response: http.ServerResponse,
   ): Promise<void> {
-    const richRequest = new HttpRequest(request);
+    const richRequest = new Request(request);
 
     const { content, headers, statusCode } =
       await this.router.respond(richRequest);
