@@ -4,6 +4,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .container {
@@ -19,8 +20,19 @@
 }
 
 .message {
-  font-family: 'Roboto Mono', monospace;
   font-size: 1.8rem;
   color: #333;
   text-align: center;
+}
+
+.caption {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+
+  & code {
+    background: #f1f4f5;
+    border-radius: 6px;
+    padding: 2px 4px;
+  }
 }
