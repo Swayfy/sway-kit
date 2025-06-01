@@ -1,7 +1,12 @@
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
 import http from 'node:http';
 import net from 'node:net';
+import path from 'node:path';
 import chalk, { ChalkInstance } from 'chalk';
+import { $ } from '../utils/functions/$.function.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
+import { HttpMethod } from '../http/enums/http-method.enum.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';
 import { Module } from './interfaces/module.interface.ts';
@@ -11,10 +16,22 @@ import { resolve } from '../injector/functions/resolve.function.ts';
 import { Router } from '../router/router.service.ts';
 import { ServerOptions } from './interfaces/server-options.interface.ts';
 import { StateManager } from '../state/state-manager.service.ts';
-import { HttpMethod } from '../http/enums/http-method.enum.ts';
+import { OS } from '../constants.ts';
+
+enum WebClientAlias {
+  darwin = 'open',
+  linux = 'sensible-browser',
+  windows = 'explorer',
+}
 
 @Inject([Logger, Router, StateManager])
 export class Server implements Disposable {
+  private readonly exitSignals: NodeJS.Signals[] = [
+    'SIGINT',
+    'SIGQUIT',
+    'SIGTERM',
+  ];
+
   private options: Partial<ServerOptions> = {};
 
   private server?: http.Server;
@@ -24,6 +41,22 @@ export class Server implements Disposable {
     private readonly router: Router,
     private readonly stateManager: StateManager,
   ) {}
+
+  private addExitSignalListener(callback: () => void | Promise<void>): void {
+    for (const signal of this.exitSignals) {
+      if (OS === 'win32' && signal !== 'SIGINT') {
+        continue;
+      }
+
+      process.on(signal, async () => {
+        const result = callback();
+
+        if (result instanceof Promise) {
+          await result;
+        }
+      });
+    }
+  }
 
   private async findAvailablePort(port: number): Promise<number> {
     const server = net.createServer();
@@ -76,7 +109,7 @@ export class Server implements Disposable {
         }
 
         case statusCode >= 400 && statusCode < 500: {
-          statusColor = chalk.hex('#d19a90');
+          statusColor = chalk.hex('#ed9b58');
 
           break;
         }
@@ -89,7 +122,7 @@ export class Server implements Disposable {
       }
 
       this.logger.info(
-        `${statusColor(`[${statusCode}]`)} ${chalk.bold(request.method ?? HttpMethod.Get)} ${chalk.bold(request.url ?? HttpMethod.Get)}`,
+        `${statusColor(`[${statusCode}]`)} ${chalk.white.bold(request.method ?? HttpMethod.Get)} ${chalk.white.bold(request.url ?? HttpMethod.Get)}`,
       );
     }
 
@@ -150,8 +183,60 @@ export class Server implements Disposable {
     return this;
   }
 
+  private async setupDevelopmentEnvironment(): Promise<void> {
+    if (
+      process.argv[2] === '--open' &&
+      !fs.existsSync(path.join('node_modules', '.sway-temp'))
+    ) {
+      try {
+        await $(
+          `${
+            WebClientAlias[OS as keyof typeof WebClientAlias] ?? 'open'
+          } ${this.router.baseUrl()}`,
+        );
+      } finally {
+        await fsp.mkdir(path.join('node_modules', '.sway-temp'), {
+          recursive: true,
+        });
+
+        await fsp.writeFile(
+          path.join('node_modules', '.sway-temp', 'server'),
+          'Development server is up\n',
+          'utf8',
+        );
+      }
+    }
+
+    this.addExitSignalListener(async () => {
+      try {
+        await fsp.rm(path.join('node_modules', '.sway-temp'), {
+          recursive: true,
+          force: true,
+        });
+      } finally {
+        process.exit();
+      }
+    });
+  }
+
+  private setupProductionEnvironment(): void {
+    this.addExitSignalListener(() => {
+      const shouldQuit = confirm(
+        'Are you sure you want to quit production server?',
+      );
+
+      if (shouldQuit) {
+        process.exit();
+      }
+    });
+  }
+
   public async start(): Promise<void> {
     this.stateManager.setup(this.options.config ?? {});
+
+    this.stateManager.state.isProduction
+      ? this.setupProductionEnvironment()
+      : await this.setupDevelopmentEnvironment();
 
     for (const module of this.options.modules ?? []) {
       this.registerModule(module);
@@ -175,6 +260,10 @@ export class Server implements Disposable {
       await this.handleRequest(request, response);
     });
 
+    this.addExitSignalListener(async () => {
+      process.exit();
+    });
+
     this.server.listen(port, this.stateManager.state.host, () => {
       this.logger.info(
         `HTTP server is running on ${
@@ -188,7 +277,5 @@ export class Server implements Disposable {
 
   public [Symbol.dispose](): void {
     this.logger.warn('Server has terminated');
-
-    process.exit(1);
   }
 }

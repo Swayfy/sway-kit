@@ -22,11 +22,19 @@ export class Logger {
     console.error(chalk.red(message));
   }
 
+  public success(message: string): void {
+    if (!this.stateManager.state.logger.enabled) {
+      return;
+    }
+
+    console.log(chalk.green(message));
+  }
+
   public warn(message: string): void {
     if (!this.stateManager.state.logger.enabled) {
       return;
     }
 
-    console.warn(chalk.yellow(message));
+    console.warn(chalk.hex('#ed9b58')(message));
   }
 }
