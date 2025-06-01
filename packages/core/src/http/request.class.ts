@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import fse from 'node:fs/promises';
-import {join as joinPath} from 'node:path';
+import { join as joinPath } from 'node:path';
 import { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import formidable, { Fields, Files, File } from 'formidable';
 import { Encrypter } from '../encrypter/encrypter.service.ts';
@@ -77,7 +77,7 @@ export class Request {
   }
 
   public input(name: string): string | undefined {
-    return this.body[name]
+    return this.body[name];
   }
 
   public isAjaxRequest(): boolean {
@@ -138,7 +138,13 @@ export class Request {
   }
 
   public path(): RoutePath {
-    return new URL(this.url()).pathname as RoutePath;
+    const path = new URL(this.url()).pathname as RoutePath;
+
+    if (path !== '/' && path.endsWith('/')) {
+      return path.slice(0, -1) as RoutePath;
+    }
+
+    return path;
   }
 
   public get query(): Record<string, any> {
@@ -215,6 +221,8 @@ export class Request {
           },
         );
       }
+
+      resolve();
     });
   }
 }

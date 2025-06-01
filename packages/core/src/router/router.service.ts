@@ -310,12 +310,12 @@ export class Router {
     };
   }
 
-  private resolveRoutePath(basePath: RoutePath, path: RoutePath): RoutePath {
-    return basePath === '/'
+  private resolveRoutePath(prefix: RoutePath, path: RoutePath): RoutePath {
+    return prefix === '/'
       ? path
-      : (`${basePath}${
-          path[0] !== '/' && basePath.split('').pop() !== '/' ? '/' : ''
-        }${path}` as RoutePath);
+      : (`${prefix}${
+          path[0] !== '/' && prefix.endsWith('/') ? '/' : ''
+        }${path !== '/' ? path : ''}` as RoutePath);
   }
 
   public baseUrl(): Url {
@@ -432,13 +432,10 @@ export class Router {
         controllerMethodRef,
       )!;
 
-      const basePath =
-        Reflector.getMetadata<RoutePath>(
-          'basePath',
-          Object.getPrototypeOf(controllerInstance),
-        ) ?? '/';
+      const prefix =
+        Reflector.getMetadata<RoutePath>('prefix', controller) ?? '/';
 
-      const resolvedPath = this.resolveRoutePath(basePath, path);
+      const resolvedPath = this.resolveRoutePath(prefix, path);
 
       this.registerRoute(resolvedPath, methods, async (...args: unknown[]) => {
         const methodResult = controllerMethodRef.call(

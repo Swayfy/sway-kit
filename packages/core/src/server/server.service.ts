@@ -124,7 +124,7 @@ export class Server implements Disposable {
       }
 
       this.logger.info(
-        `${statusColor(`[${statusCode}]`)} ${chalk.white.bold(request.method ?? HttpMethod.Get)} ${chalk.white.bold(request.url ?? HttpMethod.Get)}`,
+        `${statusColor(`[${statusCode}]`)} ${chalk.white.bold(richRequest.method() ?? HttpMethod.Get)} ${chalk.white.bold(richRequest.path())}`,
       );
     }
 

@@ -1,9 +1,10 @@
+import { ClassDecorator } from '../../utils/types/class-decorator.type.ts';
 import { HttpMethod } from '../../http/enums/http-method.enum.ts';
-import { HttpStatus } from '../../http/enums/http-status.enum.ts';
 import { MethodDecorator } from '../../utils/types/method-decorator.type.ts';
 import { Reflector } from '../../utils/reflector.class.ts';
 import { resolve } from '../../injector/functions/resolve.function.ts';
 import { Router } from '../router.service.ts';
+import { RoutePath } from '../types/route-path.type.ts';
 
 const router = resolve(Router);
 
@@ -48,5 +49,11 @@ export function Error(): MethodDecorator {
     Reflector.defineMetadata<boolean>('httpErrorHandler', true, originalMethod);
 
     return originalMethod;
+  };
+}
+
+export function Prefix(prefix: RoutePath): ClassDecorator {
+  return (originalClass) => {
+    Reflector.defineMetadata<RoutePath>('prefix', prefix, originalClass);
   };
 }
