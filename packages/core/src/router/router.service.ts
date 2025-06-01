@@ -20,6 +20,7 @@ import { RoutePath } from './types/route-path.type.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 import { Url } from './types/url.type.ts';
 import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
+import { JsonResponse } from '../http/json-response.class.ts';
 
 interface ResponseOptions {
   cookies?: Record<string, string>;
@@ -140,10 +141,11 @@ export class Router {
       'x-xss-protection': '0',
     };
 
-    const { body: parsedBody, contentType } = await this.parseResponseBody(
-      request,
-      body,
-    );
+    const {
+      body: parsedBody,
+      contentType,
+      statusCode: finalStatusCode,
+    } = await this.parseResponseBody(request, body);
 
     const baseHeaders = {
       'content-type': `${contentType}; charset=utf-8`,
@@ -163,7 +165,9 @@ export class Router {
         ...securityHeaders,
         ...headers,
       }),
-      parsedBody === null ? HttpStatus.NoContent : statusCode,
+      finalStatusCode === statusCode && parsedBody === null
+        ? HttpStatus.NoContent
+        : (finalStatusCode ?? statusCode),
     );
 
     for (const [cookie, cookieValue] of Object.entries(cookies)) {
@@ -207,9 +211,11 @@ export class Router {
   private async parseResponseBody(
     request: HttpRequest,
     body: unknown,
+    statusCode?: HttpStatus,
   ): Promise<{
     body: string | null | Buffer | Uint8Array;
     contentType: string;
+    statusCode?: HttpStatus;
   }> {
     let contentType = 'text/html';
 
@@ -242,6 +248,17 @@ export class Router {
         break;
       }
 
+      case body instanceof JsonResponse: {
+        body = JSON.stringify((body as JsonResponse).content);
+        contentType = 'application/json';
+
+        if ((body as JsonResponse).statusCode) {
+          statusCode = (body as JsonResponse).statusCode;
+        }
+
+        break;
+      }
+
       case body instanceof Buffer || body instanceof Uint8Array: {
         contentType = 'application/octet-stream';
 
@@ -256,6 +273,7 @@ export class Router {
     return {
       body: body as string | null | Buffer | Uint8Array,
       contentType,
+      statusCode,
     };
   }
 
