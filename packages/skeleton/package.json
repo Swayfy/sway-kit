@@ -4,7 +4,6 @@
   "description": "SwayKit Core backend development framework project skeleton",
   "type": "module",
   "main": "./build/main.js",
-  "repository": "https://github.com/Swayfy/sway-kit.git",
   "author": "Swayfy",
   "license": "MIT",
   "private": true,

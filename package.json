@@ -2,7 +2,10 @@
   "name": "sway-kit",
   "description": "SwayKit development tools",
   "main": "index.js",
-  "repository": "https://github.com/Swayfy/sway-kit.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Swayfy/sway-kit.git"
+  },
   "author": "Swayfy",
   "license": "MIT",
   "private": true,
