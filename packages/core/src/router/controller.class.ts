@@ -1,8 +1,17 @@
+import { DownloadResponse } from '../http/download-response.class.ts';
 import { HttpStatus } from '../http/enums/http-status.enum.ts';
 import { JsonResponse } from '../http/json-response.class.ts';
 import { ViewResponse } from '../http/view-response.class.ts';
 
 export abstract class Controller {
+  public download(
+    content: string | Buffer,
+    filename: string,
+    statusCode?: HttpStatus,
+  ): DownloadResponse {
+    return new DownloadResponse(content, filename, statusCode);
+  }
+
   public json(content: object, statusCode?: HttpStatus): JsonResponse {
     return new JsonResponse(content, statusCode);
   }

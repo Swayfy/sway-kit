@@ -3,6 +3,7 @@ import path from 'node:path';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { CONTENT_TYPES } from './constants.ts';
 import { Controller } from './controller.class.ts';
+import { DownloadResponse } from '../http/download-response.class.ts';
 import { HttpError } from '../http/http-error.class.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
 import { HttpStatus } from '../http/enums/http-status.enum.ts';
@@ -136,9 +137,6 @@ export class Router {
       }),
       'x-content-type-options': 'nosniff',
       'x-dns-prefetch-control': 'off',
-      ...(this.stateManager.state.poweredByHeader && {
-        'x-powered-by': 'SwayKit Core',
-      }),
       'x-xss-protection': '0',
     };
 
@@ -146,6 +144,7 @@ export class Router {
       body: parsedBody,
       contentType,
       statusCode: finalStatusCode,
+      additionalHeaders,
     } = await this.parseResponseBody(request, body);
 
     const baseHeaders = {
@@ -157,6 +156,10 @@ export class Router {
               (this.stateManager.state.cache.maxAge * 24 * TimeUnit.Hour) / 1000
             }`
           : 'no-cache',
+      ...(this.stateManager.state.poweredByHeader && {
+        'x-powered-by': 'SwayKit Core',
+      }),
+      ...additionalHeaders,
     };
 
     const response = new Response(
@@ -215,8 +218,10 @@ export class Router {
     body: string | null | Buffer | Uint8Array;
     contentType: string;
     statusCode?: HttpStatus;
+    additionalHeaders: Record<string, string>;
   }> {
     let contentType = 'text/html';
+    let additionalHeaders: Record<string, string> = {};
 
     if (body instanceof Promise) {
       body = await body;
@@ -249,6 +254,21 @@ export class Router {
             (body as Record<string, unknown>).constructor === Object): {
           body = JSON.stringify(body);
           contentType = 'application/json';
+
+          break;
+        }
+
+        case body instanceof DownloadResponse: {
+          body = JSON.stringify((body as DownloadResponse).content);
+          contentType = 'application/octet-stream';
+
+          additionalHeaders['content-disposition'] = `attachment; filename="${
+            (body as DownloadResponse).filename ?? 'download'
+          }"`;
+
+          if ((body as DownloadResponse).statusCode) {
+            statusCode = (body as DownloadResponse).statusCode;
+          }
 
           break;
         }
@@ -307,6 +327,7 @@ export class Router {
       body: body as string | null | Buffer | Uint8Array,
       contentType,
       statusCode,
+      additionalHeaders,
     };
   }
 

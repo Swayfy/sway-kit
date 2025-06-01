@@ -1,3 +1,4 @@
+export * from './download-response.class.ts';
 export * from './enums/http-method.enum.ts';
 export * from './enums/http-status.enum.ts';
 export * from './http-error.class.ts';
