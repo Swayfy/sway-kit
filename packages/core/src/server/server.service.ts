@@ -85,6 +85,8 @@ export class Server implements Disposable {
   ): Promise<void> {
     const richRequest = new Request(request);
 
+    await richRequest.onReady();
+
     const { content, headers, statusCode } =
       await this.router.respond(richRequest);
 
