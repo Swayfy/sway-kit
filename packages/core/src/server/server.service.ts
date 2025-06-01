@@ -21,7 +21,7 @@ import { OS } from '../constants.ts';
 enum WebClientAlias {
   darwin = 'open',
   linux = 'sensible-browser',
-  windows = 'explorer',
+  win32 = 'explorer',
 }
 
 @Inject([Logger, Router, StateManager])
