@@ -96,3 +96,11 @@ export function Use(middleware: Constructor<Middleware>[]): MethodDecorator {
     return originalMethod;
   };
 }
+
+export function View(view: string): MethodDecorator {
+  return (originalMethod) => {
+    Reflector.defineMetadata<string>('view', view, originalMethod);
+
+    return originalMethod;
+  };
+}

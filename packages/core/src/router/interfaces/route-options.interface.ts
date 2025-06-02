@@ -6,6 +6,8 @@ export interface RouteOptions {
   cookies?: Record<string, string>;
   cors?: boolean;
   headers?: Record<string, string>;
+  httpErrorHandler?: boolean;
   middleware?: Constructor<Middleware>[];
   statusCode?: HttpStatus;
+  view?: string;
 }

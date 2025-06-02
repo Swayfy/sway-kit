@@ -300,22 +300,7 @@ export class Router {
         }
 
         case body instanceof ViewResponse: {
-          const viewName = (body as ViewResponse).name;
-          const rendered = await fs.readFile(
-            path.join(
-              'views',
-              `${viewName.replaceAll(/[/\\]/g, path.sep)}.html`,
-            ),
-            'utf-8',
-          );
-
-          body = rendered.replaceAll(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_, key) => {
-            if (key in (body as ViewResponse).data) {
-              return String((body as ViewResponse).data[key]);
-            }
-
-            throw new Error(`Missing variable "${key}" in view ${viewName}`);
-          });
+          body = await (body as ViewResponse).content();
 
           contentType = 'text/html';
 
@@ -510,6 +495,7 @@ export class Router {
               'middleware',
               controller,
             ),
+          view: Reflector.getMetadata<string>('view', controllerMethodRef),
         },
       );
     }
@@ -531,6 +517,18 @@ export class Router {
 
         for (const method of route.methods) {
           if (requestMethod === method && urlPattern.test(request.path())) {
+            if (route.view) {
+              return await this.createResponse(
+                request,
+                new ViewResponse(route.view),
+                {
+                  cookies: route.cookies,
+                  headers: route.headers,
+                  statusCode: route.statusCode,
+                },
+              );
+            }
+
             const paramGroups =
               urlPattern.exec(request.path())?.pathname.groups ?? {};
 
