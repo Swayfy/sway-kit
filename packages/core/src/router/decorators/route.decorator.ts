@@ -44,16 +44,18 @@ export const Unlock = router.createRouteDecorator([HttpMethod.Unlock]);
 
 export const Methods = router.createRouteDecorator();
 
-export function Error(): MethodDecorator {
+export function Cors(): MethodDecorator {
   return (originalMethod) => {
-    Reflector.defineMetadata<boolean>('httpErrorHandler', true, originalMethod);
+    Reflector.defineMetadata<boolean>('cors', true, originalMethod);
 
     return originalMethod;
   };
 }
 
-export function Prefix(prefix: RoutePath): ClassDecorator {
-  return (originalClass) => {
-    Reflector.defineMetadata<RoutePath>('prefix', prefix, originalClass);
+export function Error(): MethodDecorator {
+  return (originalMethod) => {
+    Reflector.defineMetadata<boolean>('httpErrorHandler', true, originalMethod);
+
+    return originalMethod;
   };
 }

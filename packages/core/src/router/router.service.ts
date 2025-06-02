@@ -442,6 +442,10 @@ export class Router {
       );
 
       if (handler) {
+        if (this.httpErrorHandler) {
+          throw new Error('Route error handler has already been defined');
+        }
+
         this.httpErrorHandler = async (
           statusCode: HttpStatus,
           message: string,
@@ -469,6 +473,16 @@ export class Router {
         Reflector.getMetadata<RoutePath>('prefix', controller) ?? '/';
 
       const resolvedPath = this.resolveRoutePath(prefix, path);
+
+      const cors =
+        Reflector.getMetadata<boolean>('cors', controllerMethodRef) ||
+        Reflector.getMetadata<boolean>('cors', controller);
+
+      if (cors) {
+        this.registerRoute(resolvedPath, [HttpMethod.Options], async () => {
+          return null;
+        });
+      }
 
       this.registerRoute(resolvedPath, methods, async (...args: unknown[]) => {
         const methodResult = controllerMethodRef.call(
