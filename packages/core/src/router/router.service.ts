@@ -23,6 +23,7 @@ import { Url } from './types/url.type.ts';
 import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
 import { JsonResponse } from '../http/json-response.class.ts';
 import { ViewResponse } from '../http/view-response.class.ts';
+import { HtmlResponse } from '../http/html-response.class.ts';
 
 interface ResponseOptions {
   cookies?: Record<string, string>;
@@ -268,6 +269,17 @@ export class Router {
 
           if ((body as DownloadResponse).statusCode) {
             statusCode = (body as DownloadResponse).statusCode;
+          }
+
+          break;
+        }
+
+        case body instanceof HtmlResponse: {
+          body = String((body as HtmlResponse).content);
+          contentType = 'text/html';
+
+          if ((body as HtmlResponse).statusCode) {
+            statusCode = (body as HtmlResponse).statusCode;
           }
 
           break;
