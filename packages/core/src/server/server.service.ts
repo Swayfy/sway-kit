@@ -17,6 +17,7 @@ import { Router } from '../router/router.service.ts';
 import { ServerOptions } from './interfaces/server-options.interface.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 import { OS } from '../constants.ts';
+import { Utils } from '../utils/utils.class.ts';
 
 enum WebClientAlias {
   darwin = 'open',
@@ -151,7 +152,12 @@ export class Server implements Disposable {
     }
 
     for (const route of instance.routes ?? []) {
-      this.router.registerRoute(...route);
+      this.router.registerRoute(
+        route.path,
+        route.methods,
+        route.action,
+        Utils.omit(route, ['path', 'methods', 'action']),
+      );
     }
 
     for (const submodule of instance.submodules ?? []) {
@@ -175,7 +181,12 @@ export class Server implements Disposable {
     }
 
     for (const route of plugin.routes ?? []) {
-      this.router.registerRoute(...route);
+      this.router.registerRoute(
+        route.path,
+        route.methods,
+        route.action,
+        Utils.omit(route, ['path', 'methods', 'action']),
+      );
     }
   }
 
@@ -249,7 +260,12 @@ export class Server implements Disposable {
     }
 
     for (const route of this.options.routes ?? []) {
-      this.router.registerRoute(...route);
+      this.router.registerRoute(
+        route.path,
+        route.methods,
+        route.action,
+        Utils.omit(route, ['path', 'methods', 'action']),
+      );
     }
 
     for (const plugin of this.options.plugins ?? []) {

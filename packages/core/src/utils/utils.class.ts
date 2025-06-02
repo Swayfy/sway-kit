@@ -58,6 +58,15 @@ export abstract class Utils {
     return this.mergeDeep(target, ...elements);
   }
 
+  public static omit<TObject extends object, TKeys extends (keyof TObject)[]>(
+    object: TObject,
+    keys: string[],
+  ): Omit<TObject, TKeys[number]> {
+    return Object.fromEntries(
+      Object.entries(object).filter(([key]) => !keys.includes(key)),
+    ) as Omit<TObject, TKeys[number]>;
+  }
+
   public static randomInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min)) + min;
   }
