@@ -1,6 +1,6 @@
 {
   "name": "@sway-kit/core",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "SwayKit Core backend development framework",
   "type": "module",
   "exports": {
