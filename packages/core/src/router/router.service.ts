@@ -447,7 +447,7 @@ export class Router {
           throw new Error('Route error handler has already been defined');
         }
 
-        this.httpErrorHandler = async (
+        this.httpErrorHandler = (
           statusCode: HttpStatus,
           message: string,
         ) => {
@@ -457,9 +457,7 @@ export class Router {
             message,
           );
 
-          return methodResult instanceof Promise
-            ? await methodResult
-            : methodResult;
+          return methodResult;
         };
 
         continue;
@@ -476,15 +474,13 @@ export class Router {
       this.registerRoute(
         this.resolveRoutePath(prefix, path),
         methods,
-        async (...args: unknown[]) => {
+        (...args: unknown[]) => {
           const methodResult = controllerMethodRef.call(
             controllerInstance,
             ...args,
           );
 
-          return methodResult instanceof Promise
-            ? await methodResult
-            : methodResult;
+          return methodResult;
         },
         {
           cors:
@@ -583,7 +579,7 @@ export class Router {
 
           return await this.createResponse(
             request,
-            content instanceof Promise ? await content : content,
+            content,
             {
               statusCode: error.statusCode,
             },
