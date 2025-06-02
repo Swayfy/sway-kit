@@ -16,7 +16,7 @@ import { resolve } from '../injector/functions/resolve.function.ts';
 import { Router } from '../router/router.service.ts';
 import { ServerOptions } from './interfaces/server-options.interface.ts';
 import { StateManager } from '../state/state-manager.service.ts';
-import { OS } from '../constants.ts';
+import { OS, VERSION } from '../constants.ts';
 import { Utils } from '../utils/utils.class.ts';
 
 enum WebClientAlias {
@@ -197,6 +197,14 @@ export class Server implements Disposable {
   }
 
   private async setupDevelopmentEnvironment(): Promise<void> {
+    if (
+      VERSION.includes('alpha') ||
+      VERSION.includes('beta') ||
+      VERSION.includes('rc')
+    ) {
+      this.logger.warn('Using a pre-release version of SwayKit Core');
+    }
+
     if (
       process.argv[2] === '--open' &&
       !fs.existsSync(path.join('node_modules', '.sway-temp'))
