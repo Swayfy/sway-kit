@@ -41,6 +41,8 @@ type RouteDecoratorFunction<THttpMethods> =
         options?: RouteOptions,
       ) => MethodDecorator;
 
+type ContentType = `${string}/${string}`;
+
 @Inject([Logger, StateManager])
 export class Router {
   private httpErrorHandler?: (
@@ -218,11 +220,11 @@ export class Router {
     statusCode?: HttpStatus,
   ): Promise<{
     body: string | null | Buffer | Uint8Array;
-    contentType: string;
+    contentType: ContentType;
     statusCode?: HttpStatus;
     additionalHeaders: Record<string, string>;
   }> {
-    let contentType = 'text/html';
+    let contentType: ContentType = 'text/html';
     let additionalHeaders: Record<string, string> = {};
 
     if (body instanceof Promise) {
@@ -388,11 +390,11 @@ export class Router {
         }
 
         Reflector.defineMetadata<Partial<Route>>(
-          'route',
+          'routeDefinition',
           {
-            ...options,
             methods,
             path,
+            ...options,
           },
           originalMethod,
         );
@@ -447,10 +449,7 @@ export class Router {
           throw new Error('Route error handler has already been defined');
         }
 
-        this.httpErrorHandler = (
-          statusCode: HttpStatus,
-          message: string,
-        ) => {
+        this.httpErrorHandler = (statusCode: HttpStatus, message: string) => {
           const methodResult = controllerMethodRef.call(
             controllerInstance,
             statusCode,
@@ -463,8 +462,8 @@ export class Router {
         continue;
       }
 
-      const { methods, path } = Reflector.getMetadata<Exclude<Route, 'action'>>(
-        'route',
+      const routeDefinition = Reflector.getMetadata<Exclude<Route, 'action'>>(
+        'routeDefinition',
         controllerMethodRef,
       )!;
 
@@ -472,8 +471,8 @@ export class Router {
         Reflector.getMetadata<RoutePath>('prefix', controller) ?? '/';
 
       this.registerRoute(
-        this.resolveRoutePath(prefix, path),
-        methods,
+        this.resolveRoutePath(prefix, routeDefinition.path),
+        routeDefinition.methods,
         (...args: unknown[]) => {
           const methodResult = controllerMethodRef.call(
             controllerInstance,
@@ -483,9 +482,25 @@ export class Router {
           return methodResult;
         },
         {
+          cookies:
+            Reflector.getMetadata<Record<string, string>>(
+              'cookies',
+              controllerMethodRef,
+            ) ??
+            routeDefinition.cookies ??
+            {},
           cors:
             Reflector.getMetadata<boolean>('cors', controllerMethodRef) ??
-            Reflector.getMetadata<boolean>('cors', controller),
+            Reflector.getMetadata<boolean>('cors', controller) ??
+            routeDefinition.cors ??
+            false,
+          headers:
+            Reflector.getMetadata<Record<string, string>>(
+              'headers',
+              controllerMethodRef,
+            ) ??
+            routeDefinition.headers ??
+            {},
           middleware:
             Reflector.getMetadata<Constructor<Middleware>[]>(
               'middleware',
@@ -542,8 +557,10 @@ export class Router {
 
             return await this.createResponse(
               request,
-              await route.action(resolvedParams, request),
+              route.action(resolvedParams, request),
               {
+                cookies: route.cookies,
+                headers: route.headers,
                 statusCode: route.statusCode,
               },
             );
@@ -577,13 +594,9 @@ export class Router {
             error.message,
           );
 
-          return await this.createResponse(
-            request,
-            content,
-            {
-              statusCode: error.statusCode,
-            },
-          );
+          return await this.createResponse(request, content, {
+            statusCode: error.statusCode,
+          });
         }
 
         return await this.createResponse(request, null, {

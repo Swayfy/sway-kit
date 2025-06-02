@@ -45,6 +45,18 @@ export const Unlock = router.createRouteDecorator([HttpMethod.Unlock]);
 
 export const Methods = router.createRouteDecorator();
 
+export function Cookies(cookies: Record<string, string>): MethodDecorator {
+  return (originalMethod) => {
+    Reflector.defineMetadata<Record<string, string>>(
+      'cookies',
+      cookies,
+      originalMethod,
+    );
+
+    return originalMethod;
+  };
+}
+
 export function Cors(): MethodDecorator {
   return (originalMethod) => {
     Reflector.defineMetadata<boolean>('cors', true, originalMethod);
@@ -56,6 +68,18 @@ export function Cors(): MethodDecorator {
 export function Error(): MethodDecorator {
   return (originalMethod) => {
     Reflector.defineMetadata<boolean>('httpErrorHandler', true, originalMethod);
+
+    return originalMethod;
+  };
+}
+
+export function Headers(headers: Record<string, string>): MethodDecorator {
+  return (originalMethod) => {
+    Reflector.defineMetadata<Record<string, string>>(
+      'headers',
+      headers,
+      originalMethod,
+    );
 
     return originalMethod;
   };
