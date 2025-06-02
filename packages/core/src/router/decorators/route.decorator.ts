@@ -1,6 +1,7 @@
-import { ClassDecorator } from '../../utils/types/class-decorator.type.ts';
+import { Constructor } from '../../utils/interfaces/constructor.interface.ts';
 import { HttpMethod } from '../../http/enums/http-method.enum.ts';
 import { MethodDecorator } from '../../utils/types/method-decorator.type.ts';
+import { Middleware } from '../interfaces/middleware.interface.ts';
 import { Reflector } from '../../utils/reflector.class.ts';
 import { resolve } from '../../injector/functions/resolve.function.ts';
 import { Router } from '../router.service.ts';
@@ -55,6 +56,18 @@ export function Cors(): MethodDecorator {
 export function Error(): MethodDecorator {
   return (originalMethod) => {
     Reflector.defineMetadata<boolean>('httpErrorHandler', true, originalMethod);
+
+    return originalMethod;
+  };
+}
+
+export function Use(middleware: Constructor<Middleware>[]): MethodDecorator {
+  return (originalMethod) => {
+    Reflector.defineMetadata<Constructor<Middleware>[]>(
+      'middleware',
+      middleware,
+      originalMethod,
+    );
 
     return originalMethod;
   };

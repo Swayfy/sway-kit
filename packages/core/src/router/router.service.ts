@@ -11,6 +11,7 @@ import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';
 import { EnumValuesUnion } from '../utils/types/enum-values-union.type.ts';
 import { MethodDecorator } from '../utils/types/method-decorator.type.ts';
+import { Middleware } from './interfaces/middleware.interface.ts';
 import { Reflector } from '../utils/reflector.class.ts';
 import { Request } from '../http/request.class.ts';
 import { Response } from '../http/response.class.ts';
@@ -472,28 +473,34 @@ export class Router {
       const prefix =
         Reflector.getMetadata<RoutePath>('prefix', controller) ?? '/';
 
-      const resolvedPath = this.resolveRoutePath(prefix, path);
+      this.registerRoute(
+        this.resolveRoutePath(prefix, path),
+        methods,
+        async (...args: unknown[]) => {
+          const methodResult = controllerMethodRef.call(
+            controllerInstance,
+            ...args,
+          );
 
-      const cors =
-        Reflector.getMetadata<boolean>('cors', controllerMethodRef) ||
-        Reflector.getMetadata<boolean>('cors', controller);
-
-      if (cors) {
-        this.registerRoute(resolvedPath, [HttpMethod.Options], async () => {
-          return null;
-        });
-      }
-
-      this.registerRoute(resolvedPath, methods, async (...args: unknown[]) => {
-        const methodResult = controllerMethodRef.call(
-          controllerInstance,
-          ...args,
-        );
-
-        return methodResult instanceof Promise
-          ? await methodResult
-          : methodResult;
-      });
+          return methodResult instanceof Promise
+            ? await methodResult
+            : methodResult;
+        },
+        {
+          cors:
+            Reflector.getMetadata<boolean>('cors', controllerMethodRef) ??
+            Reflector.getMetadata<boolean>('cors', controller),
+          middleware:
+            Reflector.getMetadata<Constructor<Middleware>[]>(
+              'middleware',
+              controllerMethodRef,
+            ) ??
+            Reflector.getMetadata<Constructor<Middleware>[]>(
+              'middleware',
+              controller,
+            ),
+        },
+      );
     }
   }
 
@@ -522,7 +529,20 @@ export class Router {
               }
             }
 
-            const resolvedParams = Object.values(paramGroups);
+            const resolvedParams: string[] = Object.values(paramGroups);
+
+            if (route.middleware) {
+              for (const middlewareRef of route.middleware) {
+                const middlewareResult = resolve(middlewareRef).handle(
+                  resolvedParams,
+                  request,
+                );
+
+                if (middlewareResult instanceof Promise) {
+                  await middlewareResult;
+                }
+              }
+            }
 
             return await this.createResponse(
               request,
@@ -589,11 +609,17 @@ export class Router {
     action: (...args: unknown[]) => unknown | Promise<unknown>,
     options: RouteOptions = {},
   ): void {
+    if (options.cors) {
+      this.registerRoute(path, [HttpMethod.Options], async () => {
+        return null;
+      });
+    }
+
     this.routes.push({
-      ...options,
       action,
       methods,
       path,
+      ...options,
     });
   }
 

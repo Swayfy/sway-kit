@@ -60,10 +60,12 @@ export abstract class Utils {
 
   public static omit<TObject extends object, TKeys extends (keyof TObject)[]>(
     object: TObject,
-    keys: string[],
+    keys: (keyof TObject)[],
   ): Omit<TObject, TKeys[number]> {
     return Object.fromEntries(
-      Object.entries(object).filter(([key]) => !keys.includes(key)),
+      Object.entries(object).filter(
+        ([key]) => !keys.includes(key as keyof TObject),
+      ),
     ) as Omit<TObject, TKeys[number]>;
   }
 
