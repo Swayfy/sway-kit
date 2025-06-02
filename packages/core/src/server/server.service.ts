@@ -17,12 +17,13 @@ import { Router } from '../router/router.service.ts';
 import { ServerOptions } from './interfaces/server-options.interface.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 import { OS, VERSION } from '../constants.ts';
+import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
 import { Utils } from '../utils/utils.class.ts';
 
 enum WebClientAlias {
   darwin = 'open',
-  linux = 'sensible-browser',
-  win32 = 'explorer',
+  linux = 'xdg-open',
+  win32 = 'start',
 }
 
 @Inject([Logger, Router, StateManager])
@@ -84,6 +85,8 @@ export class Server implements Disposable {
     request: http.IncomingMessage,
     response: http.ServerResponse,
   ): Promise<void> {
+    const performanceTimerStart = performance.now();
+
     const richRequest = new Request(request);
 
     await richRequest.onReady();
@@ -124,8 +127,15 @@ export class Server implements Disposable {
         }
       }
 
+      const performanceElapsedTime = performance.now() - performanceTimerStart;
+
+      const responsePerformance =
+        performanceElapsedTime >= TimeUnit.Second
+          ? `~ ${(performanceElapsedTime / TimeUnit.Second).toFixed(1)}s`
+          : `~ ${performanceElapsedTime.toFixed(1)}ms`;
+
       this.logger.info(
-        `${statusColor(`[${statusCode}]`)} ${chalk.white.bold(richRequest.method() ?? HttpMethod.Get)} ${chalk.white.bold(richRequest.path())}`,
+        `${statusColor(`[${statusCode}]`)} ${chalk.white.bold(richRequest.method() ?? HttpMethod.Get)} ${chalk.white.bold(richRequest.path())} ${chalk.gray('.'.repeat(90))} ${chalk.gray(responsePerformance)}`,
       );
     }
 
