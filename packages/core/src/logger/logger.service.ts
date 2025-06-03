@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import util from 'node:util';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 
@@ -11,7 +11,7 @@ export class Logger {
       return;
     }
 
-    console.log(chalk.blue(message));
+    console.log(util.styleText('blue', message));
   }
 
   public error(message: string): void {
@@ -19,7 +19,7 @@ export class Logger {
       return;
     }
 
-    console.error(chalk.red(message));
+    console.error(util.styleText('red', message));
   }
 
   public success(message: string): void {
@@ -27,7 +27,7 @@ export class Logger {
       return;
     }
 
-    console.log(chalk.green(message));
+    console.log(util.styleText('green', message));
   }
 
   public warn(message: string): void {
@@ -35,6 +35,6 @@ export class Logger {
       return;
     }
 
-    console.warn(chalk.hex('#ed9b58')(message));
+    console.warn(util.styleText('yellowBright', message));
   }
 }

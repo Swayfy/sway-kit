@@ -3,7 +3,7 @@ import fsp from 'node:fs/promises';
 import http from 'node:http';
 import net from 'node:net';
 import path from 'node:path';
-import chalk, { ChalkInstance } from 'chalk';
+import util from 'node:util';
 import { $ } from '../utils/functions/$.function.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
@@ -99,29 +99,29 @@ export class Server implements Disposable {
       (this.stateManager.state.logger.staticFileRequests &&
         (await richRequest.isStaticFileRequest()))
     ) {
-      let statusColor: ChalkInstance = chalk.blue;
+      let statusColor: 'blue' | 'green' | 'yellowBright' | 'red' = 'blue';
 
       switch (true) {
         case statusCode >= 100 && statusCode < 200: {
-          statusColor = chalk.blue;
+          statusColor = 'blue';
 
           break;
         }
 
         case statusCode >= 200 && statusCode < 400: {
-          statusColor = chalk.green;
+          statusColor = 'green';
 
           break;
         }
 
         case statusCode >= 400 && statusCode < 500: {
-          statusColor = chalk.hex('#ed9b58');
+          statusColor = 'yellowBright';
 
           break;
         }
 
         case statusCode >= 500 && statusCode < 600: {
-          statusColor = chalk.red;
+          statusColor = 'red';
 
           break;
         }
@@ -134,8 +134,23 @@ export class Server implements Disposable {
           ? `~ ${(performanceElapsedTime / TimeUnit.Second).toFixed(1)}s`
           : `~ ${performanceElapsedTime.toFixed(1)}ms`;
 
+      const logLeft = `${util.styleText(statusColor, `[${statusCode}]`)} ${util.styleText(
+        ['white', 'bold'],
+        richRequest.method() ?? HttpMethod.Get,
+      )} ${util.styleText(['white', 'bold'], richRequest.path())}`;
+
+      const logRight = `${util.styleText(['white', 'dim'], responsePerformance)}`;
+
       this.logger.info(
-        `${statusColor(`[${statusCode}]`)} ${chalk.white.bold(richRequest.method() ?? HttpMethod.Get)} ${chalk.white.bold(richRequest.path())} ${chalk.gray('.'.repeat(90))} ${chalk.gray(responsePerformance)}`,
+        `${logLeft} ${util.styleText(
+          ['white', 'dim'],
+          '.'.repeat(
+            process.stdout.columns -
+              util.stripVTControlCharacters(logLeft).length -
+              util.stripVTControlCharacters(logRight).length -
+              4,
+          ),
+        )} ${logRight}`,
       );
     }
 
@@ -304,9 +319,9 @@ export class Server implements Disposable {
       this.logger.info(
         `HTTP server is running on ${
           this.stateManager.state.isProduction
-            ? `port ${chalk.bold(port)}`
-            : `${chalk.bold(this.router.baseUrl())}`
-        }${this.stateManager.state.isProduction ? '' : chalk.gray(` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
+            ? `port ${util.styleText(['bold'], String(port))}`
+            : `${util.styleText(['bold'], this.router.baseUrl())}`
+        }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
       );
     });
   }
