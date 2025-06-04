@@ -4,13 +4,17 @@ import http from 'node:http';
 import net from 'node:net';
 import path from 'node:path';
 import util from 'node:util';
+import { WebSocketServer } from 'ws';
 import { $ } from '../utils/functions/$.function.ts';
+import { Broadcaster } from '../web-socket/broadcaster.class.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
+import { Encrypter } from '../encrypter/encrypter.service.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';
 import { Module } from './interfaces/module.interface.ts';
 import { Plugin } from './interfaces/plugin.interface.ts';
+import { Reflector } from '../utils/reflector.class.ts';
 import { Request } from '../http/request.class.ts';
 import { resolve } from '../injector/functions/resolve.function.ts';
 import { Router } from '../router/router.service.ts';
@@ -26,7 +30,7 @@ enum WebClientAlias {
   win32 = 'start',
 }
 
-@Inject([Logger, Router, StateManager])
+@Inject([Encrypter, Logger, Router, StateManager])
 export class Server implements Disposable {
   private readonly exitSignals: NodeJS.Signals[] = [
     'SIGINT',
@@ -38,7 +42,12 @@ export class Server implements Disposable {
 
   private server?: http.Server;
 
+  private readonly webSocketChannels: Constructor<Broadcaster>[] = [];
+
+  private webSocketServer?: WebSocketServer;
+
   constructor(
+    private readonly encrypter: Encrypter,
     private readonly logger: Logger,
     private readonly router: Router,
     private readonly stateManager: StateManager,
@@ -60,6 +69,101 @@ export class Server implements Disposable {
     }
   }
 
+  private async createWebSocketServer(): Promise<void> {
+    this.stateManager.state.webSocket.port = await this.findAvailablePort(
+      this.stateManager.state.webSocket.port,
+    );
+
+    if (
+      this.stateManager.state.webSocket.port === this.stateManager.state.port
+    ) {
+      this.webSocketServer = new WebSocketServer({
+        noServer: true,
+      });
+
+      this.server!.on('upgrade', (request, socket, head) => {
+        this.webSocketServer!.handleUpgrade(request, socket, head, (ws) => {
+          this.webSocketServer!.emit('connection', ws, request);
+        });
+      });
+    } else {
+      this.webSocketServer = new WebSocketServer({
+        port: this.stateManager.state.webSocket.port,
+      });
+    }
+
+    this.webSocketServer!.on('connection', (socket: WebSocket) => {
+      for (const channel of this.webSocketChannels) {
+        const channelInstance = resolve(channel);
+        const socketId = this.encrypter.generateUuid();
+
+        const channelProperties = Object.getOwnPropertyNames(
+          Object.getPrototypeOf(channelInstance),
+        );
+
+        const channelListenerMethods = channelProperties.filter((property) => {
+          return (
+            !['constructor', 'broadcast'].includes(property) &&
+            property[0] !== '_' &&
+            typeof Object.getPrototypeOf(channelInstance)[property] ===
+              'function' &&
+            !!Reflector.getMetadata<string>(
+              'subscribeToEvent',
+              Object.getPrototypeOf(channelInstance)[property],
+            )
+          );
+        });
+
+        const authorizationMethod = Object.getPrototypeOf(channelInstance)
+          .authorize as () => boolean | Promise<boolean>;
+
+        socket.onopen = () => {
+          channelInstance.activeSockets.set(socketId, socket);
+        };
+
+        socket.onmessage = async ({ data: payload }) => {
+          for (const channelListenerMethod of channelListenerMethods) {
+            if ('authorize' in channelInstance) {
+              const isAuthorized = authorizationMethod.call(channelInstance);
+
+              if (
+                isAuthorized instanceof Promise
+                  ? !(await isAuthorized)
+                  : !isAuthorized
+              ) {
+                continue;
+              }
+            }
+
+            const channelMethod = Object.getPrototypeOf(channelInstance)[
+              channelListenerMethod
+            ] as (payload: string) => unknown;
+
+            const channelName = Reflector.getMetadata<string>(
+              'name',
+              Object.getPrototypeOf(channelInstance),
+            );
+
+            if (JSON.parse(payload.toString()).channel === channelName) {
+              channelMethod.call(
+                channelInstance,
+                JSON.parse(payload.toString()).payload,
+              );
+            }
+          }
+        };
+
+        socket.onclose = () => {
+          channelInstance.activeSockets.delete(socketId);
+        };
+      }
+    });
+
+    this.logger.info(
+      `WebSocket server is running on port ${this.stateManager.state.webSocket.port}`,
+    );
+  }
+
   private async findAvailablePort(port: number): Promise<number> {
     const server = net.createServer();
 
@@ -72,8 +176,10 @@ export class Server implements Disposable {
         })
         .on('error', () => {
           this.logger.warn(
-            `Port ${port} is already in use. Trying port ${++port}...`,
+            `Port ${port} is already in use. Trying port ${port + 1}...`,
           );
+
+          port += 1;
 
           server.listen(port);
         })
@@ -305,7 +411,9 @@ export class Server implements Disposable {
       await this.registerPlugin(plugin);
     }
 
-    const port = await this.findAvailablePort(this.stateManager.state.port);
+    this.stateManager.state.port = await this.findAvailablePort(
+      this.stateManager.state.port,
+    );
 
     this.server = http.createServer(async (request, response) => {
       await this.handleRequest(request, response);
@@ -315,15 +423,23 @@ export class Server implements Disposable {
       process.exit();
     });
 
-    this.server.listen(port, this.stateManager.state.host, () => {
-      this.logger.info(
-        `HTTP server is running on ${
-          this.stateManager.state.isProduction
-            ? `port ${util.styleText(['bold'], String(port))}`
-            : `${util.styleText(['bold'], this.router.baseUrl())}`
-        }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
-      );
-    });
+    this.server.listen(
+      this.stateManager.state.port,
+      this.stateManager.state.host,
+      () => {
+        this.logger.info(
+          `HTTP server is running on ${
+            this.stateManager.state.isProduction
+              ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
+              : `${util.styleText(['bold'], this.router.baseUrl())}`
+          }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
+        );
+      },
+    );
+
+    if (this.stateManager.state.webSocket?.enabled) {
+      await this.createWebSocketServer();
+    }
   }
 
   public [Symbol.dispose](): void {

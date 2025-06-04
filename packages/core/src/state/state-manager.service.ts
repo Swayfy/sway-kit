@@ -84,7 +84,11 @@ export class StateManager {
           key: this.getEnv<string>('TLS_KEY') ?? false,
           keyFile: false,
         },
-        port: this.getEnv<number>('PORT') ?? 5050,
+        port: this.getEnv<number>('PORT') ?? 5000,
+        webSocket: {
+          enabled: true,
+          port: this.getEnv<number>('WEB_SOCKET_PORT') ?? 6000,
+        },
       };
     }
 

@@ -38,4 +38,8 @@ export interface AppConfig {
     keyFile: string | false;
   };
   port: number;
+  webSocket: {
+    enabled: boolean;
+    port: number;
+  };
 }
