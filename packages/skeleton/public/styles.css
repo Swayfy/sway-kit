@@ -4,7 +4,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Urbanist', monospace;
+  font-family: 'Manrope', sans-serif;
 }
 
 body {
@@ -39,5 +39,9 @@ body {
 
 .error {
   font-size: 2rem;
-  font-family: 'Roboto Mono', monospace;
+
+  & span {
+    font-family: 'Roboto Mono', monospace;
+    margin-right: 6px;
+  }
 }

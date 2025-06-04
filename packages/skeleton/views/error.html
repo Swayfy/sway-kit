@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-      href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Manrope:wght@400..700&display=swap"
       rel="stylesheet"
     >
 
@@ -20,7 +20,9 @@
 
   <body>
     <main class="container">
-      <h1 class="error">{{ statusCode }} {{ message }}</h1>
+      <h1 class="error">
+        <span>{{ statusCode }}</span> {{ message }}
+      </h1>
     </main>
   </body>
 </html>
