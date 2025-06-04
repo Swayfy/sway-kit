@@ -131,15 +131,15 @@ export class Server implements Disposable {
 
       const responsePerformance =
         performanceElapsedTime >= TimeUnit.Second
-          ? `~ ${(performanceElapsedTime / TimeUnit.Second).toFixed(1)}s`
-          : `~ ${performanceElapsedTime.toFixed(1)}ms`;
+          ? `${(performanceElapsedTime / TimeUnit.Second).toFixed(1)}s`
+          : `${performanceElapsedTime.toFixed(1)}ms`;
 
       const logLeft = `${util.styleText(statusColor, `[${statusCode}]`)} ${util.styleText(
         ['white', 'bold'],
         richRequest.method() ?? HttpMethod.Get,
       )} ${util.styleText(['white', 'bold'], richRequest.path())}`;
 
-      const logRight = `${util.styleText(['white', 'dim'], responsePerformance)}`;
+      const logRight = `${util.styleText(['white', 'dim'], `~ ${responsePerformance}`)}`;
 
       this.logger.info(
         `${logLeft} ${util.styleText(

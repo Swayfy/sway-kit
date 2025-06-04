@@ -9,13 +9,53 @@ export class HttpError extends Error {
     customMessage?: string,
     options: ErrorOptions = {},
   ) {
-    const message =
+    let message =
       customMessage ??
       Utils.getEnumKey(statusCode, HttpStatus)?.replace(
         /([a-z])([A-Z])/g,
         '$1 $2',
       ) ??
       'HTTP Error';
+
+    if (!customMessage) {
+      switch (statusCode) {
+        case HttpStatus.NonAuthoritativeInformation: {
+          message = 'Non-Authoritative Information';
+
+          break;
+        }
+
+        case HttpStatus.MultiStatus: {
+          message = 'Multi-Status';
+
+          break;
+        }
+
+        case HttpStatus.ImUsed: {
+          message = 'IM Used';
+
+          break;
+        }
+
+        case HttpStatus.UriTooLong: {
+          message = 'URI Too Long';
+
+          break;
+        }
+
+        case HttpStatus.ImATeapot: {
+          message = `I'm a Teapot`;
+
+          break;
+        }
+
+        case HttpStatus.HttpVersionNotSupported: {
+          message = 'HTTP Version Not Supported';
+
+          break;
+        }
+      }
+    }
 
     super(message, options);
 
