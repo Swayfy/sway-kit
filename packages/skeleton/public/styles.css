@@ -4,7 +4,12 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'Urbanist', monospace;
+}
+
+body {
+  background: #5865f2;
+  color: #fff;
 }
 
 .container {
@@ -15,24 +20,24 @@
   height: 100vh;
 }
 
-.logo {
-  width: 132px;
-}
-
 .message {
-  font-size: 1.8rem;
-  color: #333;
-  text-align: center;
+  font-size: 6.8rem;
 }
 
 .caption {
   margin-top: 20px;
-  font-size: 0.9rem;
+  font-size: 1.4rem;
   opacity: 0.7;
 
   & code {
-    background: #f1f4f5;
     border-radius: 6px;
-    padding: 2px 4px;
+    padding: 1px 6px;
+    background: #00000037;
+    font-family: 'Roboto Mono', monospace;
   }
+}
+
+.error {
+  font-size: 2rem;
+  font-family: 'Roboto Mono', monospace;
 }
