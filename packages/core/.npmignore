@@ -1,6 +1,7 @@
 /node_modules
 /src
 .editorconfig
+.gitattributes
 .prettierignore
 .prettierrc
 .vscode
