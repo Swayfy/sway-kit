@@ -7,6 +7,7 @@ export interface AppConfig {
     allowInlineScripts: boolean;
     allowInlineStyles: boolean;
     allowedOrigins: string[];
+    enabled: boolean;
   };
   cookies: {
     maxAge: number;

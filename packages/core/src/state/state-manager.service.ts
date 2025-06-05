@@ -72,6 +72,7 @@ export class StateManager {
           allowInlineScripts: false,
           allowInlineStyles: true,
           allowedOrigins: [],
+          enabled: true,
         },
         cookies: {
           maxAge: this.getEnv<number>('COOKIE_MAX_AGE') ?? 30,

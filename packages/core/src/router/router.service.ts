@@ -106,29 +106,44 @@ export class Router {
       'upgrade-insecure-requests': '',
     };
 
-    const { cors } = this.stateManager.state;
+    const corsHeaders = {
+      'access-control-allow-credentials': String(
+        this.stateManager.state.cors.allowCredentials,
+      ),
+      'access-control-allow-headers': this.stateManager.state.cors
+        .allowedHeaders.length
+        ? this.stateManager.state.cors.allowedHeaders.join(',')
+        : (request.header('access-control-request-headers') ?? ''),
+      ...(this.stateManager.state.cors.allowedMethods.length && {
+        'access-control-allow-methods':
+          this.stateManager.state.cors.allowedMethods.join(','),
+      }),
+      ...(((this.stateManager.state.cors.allowedOrigins.length &&
+        this.stateManager.state.cors.allowedOrigins.includes(
+          request.header('origin') ?? '',
+        )) ||
+        this.stateManager.state.cors.allowedOrigins[0] === '*') && {
+        'access-control-allow-origin':
+          this.stateManager.state.cors.allowedOrigins[0] === '*'
+            ? '*'
+            : request.header('origin'),
+      }),
+      ...(this.stateManager.state.cors.exposedHeaders.length && {
+        'access-control-expose-headers':
+          this.stateManager.state.cors.exposedHeaders.join(','),
+      }),
+      'access-control-max-age': String(this.stateManager.state.cors.maxAge),
+      ...(!this.stateManager.state.cors.allowedMethods.includes('*') && {
+        vary: 'origin',
+      }),
+    };
 
     const securityHeaders = {
-      'access-control-allow-credentials': String(cors.allowCredentials),
-      'access-control-allow-headers': cors.allowedHeaders.length
-        ? cors.allowedHeaders.join(',')
-        : (request.header('access-control-request-headers') ?? ''),
-      ...(cors.allowedMethods.length && {
-        'access-control-allow-methods': cors.allowedMethods.join(','),
+      ...(this.stateManager.state.contentSecurityPolicy.enabled && {
+        'content-security-policy': Object.entries(csp)
+          .map(([key, value]) => `${key} ${value}`)
+          .join(';'),
       }),
-      ...(((cors.allowedOrigins.length &&
-        cors.allowedOrigins.includes(request.header('origin') ?? '')) ||
-        cors.allowedOrigins[0] === '*') && {
-        'access-control-allow-origin':
-          cors.allowedOrigins[0] === '*' ? '*' : request.header('origin'),
-      }),
-      ...(cors.exposedHeaders.length && {
-        'access-control-expose-headers': cors.exposedHeaders.join(','),
-      }),
-      'access-control-max-age': String(cors.maxAge),
-      'content-security-policy': Object.entries(csp)
-        .map(([key, value]) => `${key} ${value}`)
-        .join(';'),
       'cross-origin-opener-policy': 'same-origin',
       'cross-origin-resource-policy': 'same-origin',
       'origin-agent-cluster': '?1',
@@ -136,12 +151,10 @@ export class Router {
         'autoplay=(self), camera=(), encrypted-media=(self), geolocation=(self), microphone=(), payment=(), sync-xhr=(self)',
       'referrer-policy': 'no-referrer',
       'strict-transport-security': 'max-age=31536000; includeSubDomains',
-      ...(!cors.allowedMethods.includes('*') && {
-        vary: 'origin',
-      }),
       'x-content-type-options': 'nosniff',
       'x-dns-prefetch-control': 'off',
       'x-xss-protection': '0',
+      ...corsHeaders,
     };
 
     const {
@@ -173,7 +186,9 @@ export class Router {
         ...securityHeaders,
         ...headers,
       }),
-      finalStatusCode === statusCode && parsedBody === null && request.method() !== HttpMethod.Options
+      finalStatusCode === statusCode &&
+      parsedBody === null &&
+      request.method() !== HttpMethod.Options
         ? HttpStatus.NoContent
         : (finalStatusCode ?? statusCode),
     );
