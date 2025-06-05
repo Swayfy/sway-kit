@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Error: {{ message }}</title>
+
+    <link rel="icon" href="/@/error.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Manrope:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Manrope', sans-serif;
+      }
+
+      body {
+        background: #1d1e25;
+        color: #ececf3;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .box {
+        background: #23242d;
+        border-radius: 10px;
+        padding: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: clamp(300px, 50vw, 800px);
+      }
+
+      .error {
+        font-weight: 600;
+        color: #121212;
+        background: #f25081;
+        padding: 4px 10px;
+        border-radius: 20px;
+        margin-bottom: 8px;
+        align-self: flex-start;
+      }
+
+      .info {
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="container">
+      <div class="box">
+        <div class="error">Error</div>
+
+        <h1 class="message">{{ message }}</h1>
+
+        <p class="info">{{ file }} at line {{ line }}</p>
+      </div>
+    </main>
+  </body>
+</html>

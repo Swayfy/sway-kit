@@ -10,10 +10,9 @@ export class ViewResponse {
     public readonly data: Record<string, unknown> = {},
     public readonly statusCode?: HttpStatus,
   ) {
-    this.file = path.join(
-      'views',
-      `${this.view.replaceAll(/[/\\]/g, path.sep)}.html`,
-    );
+    this.file = view.startsWith('@')
+      ? path.join(`${this.view.slice(1).replaceAll(/[/\\]/g, path.sep)}.html`)
+      : path.join('views', `${this.view.replaceAll(/[/\\]/g, path.sep)}.html`);
   }
 
   private async assertFileExists(): Promise<void> {

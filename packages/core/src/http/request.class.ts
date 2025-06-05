@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import http2 from 'node:http2';
-import fse from 'node:fs/promises';
+import fsp from 'node:fs/promises';
 import { join as joinPath } from 'node:path';
 import formidable, { Fields, Files, File } from 'formidable';
 import { Encrypter } from '../crypto/encrypter.service.ts';
@@ -18,7 +18,7 @@ File.prototype.store = async (path: string, name?: string) => {
   const directory = joinPath(...parts);
 
   if (!fs.existsSync(directory)) {
-    await fse.mkdir(directory, {
+    await fsp.mkdir(directory, {
       recursive: true,
     });
   }
@@ -32,7 +32,7 @@ File.prototype.store = async (path: string, name?: string) => {
 
   path = joinPath(directory, fileName);
 
-  await fse.rename(filepath, path);
+  await fsp.rename(filepath, path);
 
   // @ts-ignore
   this.filepath = path;
@@ -115,7 +115,7 @@ export class Request {
     }
 
     try {
-      await fse.stat(
+      await fsp.stat(
         joinPath(
           resolve(StateManager).state.staticFilesDirectory,
           this.path().slice(1),

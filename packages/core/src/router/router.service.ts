@@ -4,11 +4,11 @@ import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { CONTENT_TYPES } from './constants.ts';
 import { Controller } from './controller.class.ts';
 import { DownloadResponse } from '../http/download-response.class.ts';
+import { ErrorHandler } from '../error/error-handler.service.ts';
 import { HttpError } from '../http/http-error.class.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
 import { HttpStatus } from '../http/enums/http-status.enum.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
-import { Logger } from '../logger/logger.service.ts';
 import { EnumValuesUnion } from '../utils/types/enum-values-union.type.ts';
 import { MethodDecorator } from '../utils/types/method-decorator.type.ts';
 import { Middleware } from './interfaces/middleware.interface.ts';
@@ -43,7 +43,7 @@ type RouteDecoratorFunction<THttpMethods> =
 
 type ContentType = `${string}/${string}`;
 
-@Inject([Logger, StateManager])
+@Inject([ErrorHandler, StateManager])
 export class Router {
   private httpErrorHandler?: (
     statusCode: HttpStatus,
@@ -51,7 +51,7 @@ export class Router {
   ) => unknown;
 
   constructor(
-    private readonly logger: Logger,
+    private readonly errorHandler: ErrorHandler,
     private readonly stateManager: StateManager,
   ) {}
 
@@ -579,41 +579,64 @@ export class Router {
 
       throw new HttpError(HttpStatus.NotFound);
     } catch (error) {
-      if (error instanceof HttpError) {
+      if (error instanceof HttpError || this.stateManager.state.isProduction) {
+        const statusCode =
+          error instanceof HttpError
+            ? error.statusCode
+            : HttpStatus.InternalServerError;
+
         if (request.isAjaxRequest()) {
           return await this.createResponse(
             request,
             {
-              error: error.message,
-              statusCode: error.statusCode,
+              error: (error as Error | HttpError).message,
+              statusCode,
             },
             {
-              statusCode: error.statusCode,
+              statusCode,
             },
           );
         }
 
         if (this.httpErrorHandler) {
           const content = this.httpErrorHandler(
-            error.statusCode,
-            error.message,
+            statusCode,
+            (error as Error | HttpError).message,
           );
 
           return await this.createResponse(request, content, {
-            statusCode: error.statusCode,
+            statusCode,
           });
         }
 
         return await this.createResponse(request, null, {
-          statusCode: error.statusCode,
+          statusCode,
         });
       }
 
-      this.logger.error(`Error: ${(error as Error).message}`);
+      const { file, line, symbol } = this.errorHandler.handle(error as Error);
 
-      return await this.createResponse(request, (error as Error).message, {
-        statusCode: HttpStatus.InternalServerError,
-      });
+      let fileContent: string | undefined;
+
+      try {
+        fileContent = await fs.readFile(file ?? '', 'utf8');
+      } catch {
+        fileContent = undefined;
+      }
+
+      return await this.createResponse(
+        request,
+        new ViewResponse('@node_modules/@sway-kit/core/views/error', {
+          message: (error as Error).message,
+          file,
+          fileContent,
+          line,
+          symbol,
+        }),
+        {
+          statusCode: HttpStatus.InternalServerError,
+        },
+      );
     }
   }
 

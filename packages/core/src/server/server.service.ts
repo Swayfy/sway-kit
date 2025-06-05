@@ -12,6 +12,7 @@ import { Broadcaster } from '../web-socket/broadcaster.class.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { Encrypter } from '../crypto/encrypter.service.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
+import { ErrorHandler } from '../error/error-handler.service.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';
 import { Module } from './interfaces/module.interface.ts';
@@ -32,7 +33,7 @@ enum WebClientAlias {
   win32 = 'start',
 }
 
-@Inject([Encrypter, Logger, Router, StateManager])
+@Inject([Encrypter, ErrorHandler, Logger, Router, StateManager])
 export class Server implements Disposable {
   private readonly exitSignals: NodeJS.Signals[] = [
     'SIGINT',
@@ -50,6 +51,7 @@ export class Server implements Disposable {
 
   constructor(
     private readonly encrypter: Encrypter,
+    private readonly errorHandler: ErrorHandler,
     private readonly logger: Logger,
     private readonly router: Router,
     private readonly stateManager: StateManager,
@@ -203,7 +205,10 @@ export class Server implements Disposable {
       await this.router.respond(richRequest);
 
     if (
-      !(await richRequest.isStaticFileRequest()) ||
+      !(
+        (await richRequest.isStaticFileRequest()) ||
+        richRequest.path().startsWith('/@/')
+      ) ||
       (this.stateManager.state.logger.staticFileRequests &&
         (await richRequest.isStaticFileRequest()))
     ) {
@@ -363,6 +368,21 @@ export class Server implements Disposable {
       }
     }
 
+    this.router.registerRoute(
+      '/@/error.png',
+      [HttpMethod.Get],
+      async () => {
+        return await fsp.readFile(
+          path.join('node_modules', '@sway-kit', 'core', 'assets', 'error.png'),
+        );
+      },
+      {
+        headers: {
+          'content-type': 'image/png',
+        },
+      },
+    );
+
     this.addExitSignalListener(async () => {
       try {
         await fsp.rm(path.join('node_modules', '.sway-temp'), {
@@ -388,95 +408,102 @@ export class Server implements Disposable {
   }
 
   public async start(): Promise<void> {
-    this.stateManager.setup(this.options.config ?? {});
+    try {
+      this.stateManager.setup(this.options.config ?? {});
 
-    this.stateManager.state.isProduction
-      ? this.setupProductionEnvironment()
-      : await this.setupDevelopmentEnvironment();
+      this.stateManager.state.isProduction
+        ? this.setupProductionEnvironment()
+        : await this.setupDevelopmentEnvironment();
 
-    for (const module of this.options.modules ?? []) {
-      this.registerModule(module);
-    }
-
-    for (const controller of this.options.controllers ?? []) {
-      this.router.registerController(controller);
-    }
-
-    for (const route of this.options.routes ?? []) {
-      this.router.registerRoute(
-        route.path,
-        route.methods,
-        route.action,
-        Utils.omit(route, ['path', 'methods', 'action']),
-      );
-    }
-
-    for (const plugin of this.options.plugins ?? []) {
-      await this.registerPlugin(plugin);
-    }
-
-    this.stateManager.state.port = await this.findAvailablePort(
-      this.stateManager.state.port,
-    );
-
-    let tlsCert = '';
-    let tlsKey = '';
-
-    if (this.stateManager.state.http2 || this.stateManager.state.tls.enabled) {
-      try {
-        tlsCert = await fsp.readFile(
-          this.stateManager.state.tls.certFile,
-          'utf8',
-        );
-
-        tlsKey = await fsp.readFile(
-          this.stateManager.state.tls.keyFile,
-          'utf8',
-        );
-      } catch (error) {
-        throw new Error('Failed to load TLS key or certificate');
+      for (const module of this.options.modules ?? []) {
+        this.registerModule(module);
       }
-    }
 
-    if (this.stateManager.state.http2) {
-      this.server = http2.createSecureServer(
-        {
-          allowHTTP1: true,
-          cert: tlsCert,
-          key: tlsKey,
-        },
-        this.handleRequest.bind(this),
-      );
-    } else if (this.stateManager.state.tls.enabled) {
-      this.server = https.createServer(
-        {
-          cert: tlsCert,
-          key: tlsKey,
-        },
-        this.handleRequest.bind(this),
-      );
-    } else {
-      this.server = http.createServer(this.handleRequest.bind(this));
-    }
+      for (const controller of this.options.controllers ?? []) {
+        this.router.registerController(controller);
+      }
 
-    this.addExitSignalListener(process.exit);
-
-    this.server.listen(
-      this.stateManager.state.port,
-      this.stateManager.state.host,
-      () => {
-        this.logger.info(
-          `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
-            this.stateManager.state.isProduction
-              ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
-              : `${util.styleText(['bold'], this.router.baseUrl())}`
-          }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
+      for (const route of this.options.routes ?? []) {
+        this.router.registerRoute(
+          route.path,
+          route.methods,
+          route.action,
+          Utils.omit(route, ['path', 'methods', 'action']),
         );
-      },
-    );
+      }
 
-    if (this.stateManager.state.webSocket?.enabled) {
-      await this.createWebSocketServer();
+      for (const plugin of this.options.plugins ?? []) {
+        await this.registerPlugin(plugin);
+      }
+
+      this.stateManager.state.port = await this.findAvailablePort(
+        this.stateManager.state.port,
+      );
+
+      let tlsCert = '';
+      let tlsKey = '';
+
+      if (
+        this.stateManager.state.http2 ||
+        this.stateManager.state.tls.enabled
+      ) {
+        try {
+          tlsCert = await fsp.readFile(
+            this.stateManager.state.tls.certFile,
+            'utf8',
+          );
+
+          tlsKey = await fsp.readFile(
+            this.stateManager.state.tls.keyFile,
+            'utf8',
+          );
+        } catch (error) {
+          throw new Error('Failed to load TLS key or certificate');
+        }
+      }
+
+      if (this.stateManager.state.http2) {
+        this.server = http2.createSecureServer(
+          {
+            allowHTTP1: true,
+            cert: tlsCert,
+            key: tlsKey,
+          },
+          this.handleRequest.bind(this),
+        );
+      } else if (this.stateManager.state.tls.enabled) {
+        this.server = https.createServer(
+          {
+            cert: tlsCert,
+            key: tlsKey,
+          },
+          this.handleRequest.bind(this),
+        );
+      } else {
+        this.server = http.createServer(this.handleRequest.bind(this));
+      }
+
+      this.addExitSignalListener(process.exit);
+
+      this.server.listen(
+        this.stateManager.state.port,
+        this.stateManager.state.host,
+        () => {
+          this.logger.info(
+            `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
+              this.stateManager.state.isProduction
+                ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
+                : `${util.styleText(['bold'], this.router.baseUrl())}`
+            }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
+          );
+        },
+      );
+
+      if (this.stateManager.state.webSocket?.enabled) {
+        await this.createWebSocketServer();
+      }
+    } catch (error) {
+      this.errorHandler.handle(error as Error);
     }
   }
 
