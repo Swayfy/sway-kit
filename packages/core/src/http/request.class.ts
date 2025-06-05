@@ -1,7 +1,8 @@
 import fs from 'node:fs';
+import http from 'node:http';
+import http2 from 'node:http2';
 import fse from 'node:fs/promises';
 import { join as joinPath } from 'node:path';
-import { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import formidable, { Fields, Files, File } from 'formidable';
 import { Encrypter } from '../encrypter/encrypter.service.ts';
 import { HttpMethod } from './enums/http-method.enum.ts';
@@ -44,9 +45,11 @@ export class Request {
 
   private incomingFiles: Record<string, File | File[]> = {};
 
-  private readonly nativeInstance: IncomingMessage;
+  private readonly nativeInstance:
+    | http.IncomingMessage
+    | http2.Http2ServerRequest;
 
-  constructor(nativeInstance: IncomingMessage) {
+  constructor(nativeInstance: http.IncomingMessage | http2.Http2ServerRequest) {
     this.nativeInstance = nativeInstance;
   }
 
@@ -72,7 +75,7 @@ export class Request {
       : this.headers[name];
   }
 
-  public get headers(): IncomingHttpHeaders {
+  public get headers(): http.IncomingHttpHeaders {
     return this.nativeInstance.headers;
   }
 
@@ -210,7 +213,7 @@ export class Request {
         });
 
         form.parse(
-          this.nativeInstance,
+          this.nativeInstance as http.IncomingMessage,
           (error: any, fields: Fields, files: Files) => {
             if (error) {
               throw new Error('Cannot parse incoming request body');

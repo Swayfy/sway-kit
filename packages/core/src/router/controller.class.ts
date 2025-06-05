@@ -6,7 +6,7 @@ import { ViewResponse } from '../http/view-response.class.ts';
 
 export abstract class Controller {
   public download(
-    content: string | Buffer,
+    content: string | Buffer | Uint8Array,
     filename: string,
     statusCode?: HttpStatus,
   ): DownloadResponse {

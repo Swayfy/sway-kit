@@ -14,9 +14,12 @@ export class StateManager {
     }
   }
 
-  public getEnv<TValue extends EnvVariable>(key: string): TValue | undefined {
+  public getEnv<TValue extends EnvVariable>(
+    key: string,
+    defaultValue?: TValue,
+  ): TValue | undefined {
     if (!(key in process.env)) {
-      return undefined;
+      return defaultValue;
     }
 
     try {
@@ -70,6 +73,7 @@ export class StateManager {
           key: this.getEnv<string>('ENCRYPTION_KEY') ?? crypto.randomUUID(),
         },
         host: this.getEnv<string>('HOST') ?? 'localhost',
+        http2: this.getEnv<boolean>('HTTP_2') ?? false,
         isProduction: this.getEnv<boolean>('PRODUCTION') ?? false,
         logger: {
           enabled: true,
@@ -78,11 +82,9 @@ export class StateManager {
         poweredByHeader: false,
         staticFilesDirectory: 'public',
         tls: {
-          cert: this.getEnv<string>('TLS_CERT') ?? false,
-          certFile: false,
+          certFile: this.getEnv<string>('TLS_CERT') ?? 'cert.pem',
           enabled: false,
-          key: this.getEnv<string>('TLS_KEY') ?? false,
-          keyFile: false,
+          keyFile: this.getEnv<string>('TLS_KEY') ?? 'key.pem',
         },
         port: this.getEnv<number>('PORT') ?? 5000,
         webSocket: {

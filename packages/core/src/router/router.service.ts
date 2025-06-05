@@ -198,7 +198,7 @@ export class Router {
 
     try {
       const fileSize = (await fs.stat(filePath)).size;
-      const body = await fs.readFile(filePath);
+      const body = new Uint8Array(await fs.readFile(filePath));
 
       return await this.createResponse(request, body, {
         headers: {
@@ -219,7 +219,7 @@ export class Router {
     body: unknown,
     statusCode?: HttpStatus,
   ): Promise<{
-    body: string | null | Buffer | Uint8Array;
+    body: string | null | Uint8Array;
     contentType: ContentType;
     statusCode?: HttpStatus;
     additionalHeaders: Record<string, string>;
@@ -311,7 +311,14 @@ export class Router {
           break;
         }
 
-        case body instanceof Buffer || body instanceof Uint8Array: {
+        case body instanceof Buffer: {
+          body = new Uint8Array(body);
+          contentType = 'application/octet-stream';
+
+          break;
+        }
+
+        case body instanceof Uint8Array: {
           contentType = 'application/octet-stream';
 
           break;
@@ -324,7 +331,7 @@ export class Router {
     }
 
     return {
-      body: body as string | null | Buffer | Uint8Array,
+      body: body as string | null | Uint8Array,
       contentType,
       statusCode,
       additionalHeaders,

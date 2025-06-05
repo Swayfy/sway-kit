@@ -11,7 +11,8 @@
     "build": "vite build",
     "dev": "concurrently -r \"vite build --watch\" \"wait-on ./build/main.js && node --env-file .env --watch ./build/main.js --open\"",
     "format": "prettier --write .",
-    "prod": "node --env-file .env --watch ./build/main.js"
+    "prod": "node --env-file .env --watch ./build/main.js",
+    "tls:generate": "openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj \"/CN=localhost\" && echo 'TLS certificate generated'"
   },
   "dependencies": {
     "@sway-kit/core": "^1.0.0-alpha.2"

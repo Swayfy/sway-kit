@@ -2,7 +2,7 @@ import { HttpStatus } from './enums/http-status.enum.ts';
 
 export class Response {
   constructor(
-    public readonly content: string | null | Buffer | Uint8Array = null,
+    public readonly content: string | null | Uint8Array = null,
     public readonly headers: Headers = new Headers(),
     public readonly statusCode: HttpStatus = HttpStatus.Ok,
   ) {}

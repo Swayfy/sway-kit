@@ -23,6 +23,7 @@ export interface AppConfig {
     key: string;
   };
   host: string;
+  http2: boolean;
   isProduction: boolean;
   logger: {
     enabled: boolean;
@@ -31,11 +32,9 @@ export interface AppConfig {
   poweredByHeader: boolean;
   staticFilesDirectory: string;
   tls: {
-    cert: string | false;
-    certFile: string | false;
+    certFile: string;
     enabled: boolean;
-    key: string | false;
-    keyFile: string | false;
+    keyFile: string;
   };
   port: number;
   webSocket: {

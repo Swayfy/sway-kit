@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import http from 'node:http';
+import http2 from 'node:http2';
+import https from 'node:https';
 import net from 'node:net';
 import path from 'node:path';
 import util from 'node:util';
@@ -40,7 +42,7 @@ export class Server implements Disposable {
 
   private options: Partial<ServerOptions> = {};
 
-  private server?: http.Server;
+  private server?: http.Server | http2.Http2SecureServer | https.Server;
 
   private readonly webSocketChannels: Constructor<Broadcaster>[] = [];
 
@@ -188,8 +190,8 @@ export class Server implements Disposable {
   }
 
   private async handleRequest(
-    request: http.IncomingMessage,
-    response: http.ServerResponse,
+    request: http.IncomingMessage | http2.Http2ServerRequest,
+    response: http.ServerResponse | http2.Http2ServerResponse,
   ): Promise<void> {
     const performanceTimerStart = performance.now();
 
@@ -272,7 +274,9 @@ export class Server implements Disposable {
 
     response.statusCode = statusCode;
 
-    response.end(content);
+    content === null && this.stateManager.state.http2
+      ? response.end()
+      : (response as http.ServerResponse).end(content);
   }
 
   private registerModule(module: Constructor<Module>): void {
@@ -415,20 +419,54 @@ export class Server implements Disposable {
       this.stateManager.state.port,
     );
 
-    this.server = http.createServer(async (request, response) => {
-      await this.handleRequest(request, response);
-    });
+    let tlsCert = '';
+    let tlsKey = '';
 
-    this.addExitSignalListener(async () => {
-      process.exit();
-    });
+    if (this.stateManager.state.http2 || this.stateManager.state.tls.enabled) {
+      try {
+        tlsCert = await fsp.readFile(
+          this.stateManager.state.tls.certFile,
+          'utf8',
+        );
+
+        tlsKey = await fsp.readFile(
+          this.stateManager.state.tls.keyFile,
+          'utf8',
+        );
+      } catch (error) {
+        throw new Error('Failed to load TLS key or certificate');
+      }
+    }
+
+    if (this.stateManager.state.http2) {
+      this.server = http2.createSecureServer(
+        {
+          allowHTTP1: true,
+          cert: tlsCert,
+          key: tlsKey,
+        },
+        this.handleRequest.bind(this),
+      );
+    } else if (this.stateManager.state.tls.enabled) {
+      this.server = https.createServer(
+        {
+          cert: tlsCert,
+          key: tlsKey,
+        },
+        this.handleRequest.bind(this),
+      );
+    } else {
+      this.server = http.createServer(this.handleRequest.bind(this));
+    }
+
+    this.addExitSignalListener(process.exit);
 
     this.server.listen(
       this.stateManager.state.port,
       this.stateManager.state.host,
       () => {
         this.logger.info(
-          `HTTP server is running on ${
+          `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
             this.stateManager.state.isProduction
               ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
               : `${util.styleText(['bold'], this.router.baseUrl())}`
