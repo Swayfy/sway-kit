@@ -10,7 +10,7 @@ import { WebSocketServer } from 'ws';
 import { $ } from '../utils/functions/$.function.ts';
 import { Broadcaster } from '../web-socket/broadcaster.class.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
-import { Encrypter } from '../encrypter/encrypter.service.ts';
+import { Encrypter } from '../crypto/encrypter.service.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';

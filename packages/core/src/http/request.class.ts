@@ -4,7 +4,7 @@ import http2 from 'node:http2';
 import fse from 'node:fs/promises';
 import { join as joinPath } from 'node:path';
 import formidable, { Fields, Files, File } from 'formidable';
-import { Encrypter } from '../encrypter/encrypter.service.ts';
+import { Encrypter } from '../crypto/encrypter.service.ts';
 import { HttpMethod } from './enums/http-method.enum.ts';
 import { resolve } from '../injector/functions/resolve.function.ts';
 import { RoutePath } from '../router/types/route-path.type.ts';
