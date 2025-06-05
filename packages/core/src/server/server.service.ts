@@ -163,9 +163,13 @@ export class Server implements Disposable {
       }
     });
 
-    this.logger.info(
-      `WebSocket server is running on port ${this.stateManager.state.webSocket.port}`,
-    );
+    this.webSocketServer.on('listening', () => {
+      if (this.webSocketChannels.length > 0) {
+        this.logger.info(
+          `WebSocket server is running on port ${this.stateManager.state.webSocket.port}`,
+        );
+      }
+    });
   }
 
   private async findAvailablePort(port: number): Promise<number> {
@@ -342,7 +346,7 @@ export class Server implements Disposable {
       VERSION.includes('beta') ||
       VERSION.includes('rc')
     ) {
-      this.logger.warn('Using a pre-release version of SwayKit Core');
+      this.logger.warn('Using a pre-release version of SwayKit');
     }
 
     if (
