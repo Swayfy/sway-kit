@@ -22,17 +22,19 @@ body {
 
 .message {
   font-size: 6.8rem;
+  letter-spacing: -0.01em;
 }
 
 .caption {
   margin-top: 20px;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   opacity: 0.7;
 
   & code {
     border-radius: 6px;
     padding: 1px 6px;
     background: #00000037;
+    font-size: 1.1rem;
     font-family: 'Roboto Mono', monospace;
   }
 }
