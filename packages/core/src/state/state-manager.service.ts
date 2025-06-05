@@ -12,6 +12,21 @@ export class StateManager {
         'Encryption key length must be greater than or equal to 16',
       );
     }
+
+    if (this.state.tls.enabled) {
+      if (!this.state.tls.certFile || !this.state.tls.keyFile) {
+        throw new Error(
+          'TLS is enabled but certFile or keyFile is not set in the configuration',
+        );
+      }
+
+      if (
+        !this.state.tls.certFile.endsWith('.pem') ||
+        !this.state.tls.keyFile.endsWith('.pem')
+      ) {
+        throw new Error('TLS configuration files must be in PEM format');
+      }
+    }
   }
 
   public getEnv<TValue extends EnvVariable>(
