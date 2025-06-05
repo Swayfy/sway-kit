@@ -173,7 +173,7 @@ export class Router {
         ...securityHeaders,
         ...headers,
       }),
-      finalStatusCode === statusCode && parsedBody === null
+      finalStatusCode === statusCode && parsedBody === null && request.method() !== HttpMethod.Options
         ? HttpStatus.NoContent
         : (finalStatusCode ?? statusCode),
     );
