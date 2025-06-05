@@ -22,7 +22,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Swayfy/sway-kit.git"
+    "url": "git+https://github.com/Swayfy/sway-kit.git",
+    "directory": "packages/core"
   },
   "author": "Swayfy",
   "license": "MIT",
