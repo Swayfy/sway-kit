@@ -167,14 +167,19 @@ export class Server implements Disposable {
     });
 
     this.webSocketServer.on('listening', () => {
-      if (this.webSocketChannels.length > 0 || this.stateManager.state.hotReload.enabled && this.webSocketChannels.length > 1) {
+      if (
+        (!this.stateManager.state.hotReload.enabled &&
+          this.webSocketChannels.length > 0) ||
+        (this.stateManager.state.hotReload.enabled &&
+          this.webSocketChannels.length > 1)
+      ) {
         this.logger.info(
           `WebSocket server is running on ${
             this.stateManager.state.isProduction
               ? `port ${util.styleText(['bold'], String(this.stateManager.state.webSocket.port))}`
-              : `${util.styleText(['bold'], `ws://${String(this.stateManager.state.webSocket.port)}`)}`
+              : `${util.styleText(['bold'], `ws://${this.stateManager.state.host}:${String(this.stateManager.state.webSocket.port)}`)}`
           }`,
-        )
+        );
       }
     });
   }
@@ -537,7 +542,7 @@ export class Server implements Disposable {
             ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
             : `${util.styleText(['bold'], this.router.baseUrl())}`
         }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
-      )
+      );
 
       if (this.stateManager.state.webSocket?.enabled) {
         await this.createWebSocketServer();
