@@ -24,6 +24,10 @@ export interface AppConfig {
     key: string;
   };
   host: string;
+  hotReload: {
+    enabled: boolean;
+    watchSourceChanges: boolean;
+  };
   http2: boolean;
   isProduction: boolean;
   logger: {

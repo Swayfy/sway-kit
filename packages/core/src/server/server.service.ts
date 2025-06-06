@@ -10,7 +10,9 @@ import { WebSocketServer } from 'ws';
 import { $ } from '../utils/functions/$.function.ts';
 import { Channel } from '../web-socket/channel.class.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
+import { debounce } from '../utils/functions/debounce.function.ts';
 import { Encrypter } from '../crypto/encrypter.service.ts';
+import { HotReloadChannel } from './channels/hot-reload.channel.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
 import { ErrorHandler } from '../error/error-handler.service.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
@@ -165,10 +167,14 @@ export class Server implements Disposable {
     });
 
     this.webSocketServer.on('listening', () => {
-      if (this.webSocketChannels.length > 0) {
+      if (this.webSocketChannels.length > 0 || this.stateManager.state.hotReload.enabled && this.webSocketChannels.length > 1) {
         this.logger.info(
-          `WebSocket server is running on port ${this.stateManager.state.webSocket.port}`,
-        );
+          `WebSocket server is running on ${
+            this.stateManager.state.isProduction
+              ? `port ${util.styleText(['bold'], String(this.stateManager.state.webSocket.port))}`
+              : `${util.styleText(['bold'], `ws://${String(this.stateManager.state.webSocket.port)}`)}`
+          }`,
+        )
       }
     });
   }
@@ -392,6 +398,30 @@ export class Server implements Disposable {
       },
     );
 
+    if (this.stateManager.state.hotReload.enabled) {
+      this.webSocketChannels.push(HotReloadChannel);
+
+      const hotReloadChannel = resolve(HotReloadChannel);
+
+      fs.watch('views', { recursive: true }, () => {
+        hotReloadChannel.sendReloadRequest();
+      });
+
+      fs.watch('src', { recursive: true }, async (_event, filename) => {
+        if (filename?.endsWith('.html')) {
+          await fsp.copyFile(`src/${filename}`, `build/${filename}`);
+
+          hotReloadChannel.sendReloadRequest();
+        }
+      });
+
+      if (this.stateManager.state.hotReload.watchSourceChanges) {
+        fs.watch('build', { recursive: true }, () => {
+          debounce(() => hotReloadChannel.sendReloadRequest(), 20);
+        });
+      }
+    }
+
     this.addExitSignalListener(async () => {
       try {
         await fsp.rm(path.join('node_modules', '.sway-temp'), {
@@ -499,16 +529,15 @@ export class Server implements Disposable {
       this.server.listen(
         this.stateManager.state.port,
         this.stateManager.state.host,
-        () => {
-          this.logger.info(
-            `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
-              this.stateManager.state.isProduction
-                ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
-                : `${util.styleText(['bold'], this.router.baseUrl())}`
-            }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
-          );
-        },
       );
+
+      this.logger.info(
+        `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
+          this.stateManager.state.isProduction
+            ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
+            : `${util.styleText(['bold'], this.router.baseUrl())}`
+        }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
+      )
 
       if (this.stateManager.state.webSocket?.enabled) {
         await this.createWebSocketServer();

@@ -89,6 +89,10 @@ export class StateManager {
           key: this.getEnv<string>('ENCRYPTION_KEY') ?? crypto.randomUUID(),
         },
         host: this.getEnv<string>('HOST') ?? 'localhost',
+        hotReload: {
+          enabled: true,
+          watchSourceChanges: true,
+        },
         http2: this.getEnv<boolean>('HTTP_2') ?? false,
         isProduction: this.getEnv<boolean>('PRODUCTION') ?? false,
         logger: {
