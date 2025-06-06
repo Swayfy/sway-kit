@@ -8,7 +8,7 @@ import path from 'node:path';
 import util from 'node:util';
 import { WebSocketServer } from 'ws';
 import { $ } from '../utils/functions/$.function.ts';
-import { Broadcaster } from '../web-socket/broadcaster.class.ts';
+import { Channel } from '../web-socket/channel.class.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { Encrypter } from '../crypto/encrypter.service.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
@@ -45,7 +45,7 @@ export class Server implements Disposable {
 
   private server?: http.Server | http2.Http2SecureServer | https.Server;
 
-  private readonly webSocketChannels: Constructor<Broadcaster>[] = [];
+  private readonly webSocketChannels: Constructor<Channel>[] = [];
 
   private webSocketServer?: WebSocketServer;
 
@@ -112,14 +112,14 @@ export class Server implements Disposable {
             typeof Object.getPrototypeOf(channelInstance)[property] ===
               'function' &&
             !!Reflector.getMetadata<string>(
-              'subscribeToEvent',
+              'subscription',
               Object.getPrototypeOf(channelInstance)[property],
             )
           );
         });
 
         const authorizationMethod = Object.getPrototypeOf(channelInstance)
-          .authorize as () => boolean | Promise<boolean>;
+          .authorize as (socket: WebSocket) => boolean | Promise<boolean>;
 
         socket.onopen = () => {
           channelInstance.activeSockets.set(socketId, socket);
@@ -127,16 +127,17 @@ export class Server implements Disposable {
 
         socket.onmessage = async ({ data: payload }) => {
           for (const channelListenerMethod of channelListenerMethods) {
-            if ('authorize' in channelInstance) {
-              const isAuthorized = authorizationMethod.call(channelInstance);
+            const isAuthorized = authorizationMethod.call(
+              channelInstance,
+              socket,
+            );
 
-              if (
-                isAuthorized instanceof Promise
-                  ? !(await isAuthorized)
-                  : !isAuthorized
-              ) {
-                continue;
-              }
+            if (
+              isAuthorized instanceof Promise
+                ? !(await isAuthorized)
+                : !isAuthorized
+            ) {
+              continue;
             }
 
             const channelMethod = Object.getPrototypeOf(channelInstance)[
@@ -295,6 +296,8 @@ export class Server implements Disposable {
       this.router.registerController(controller);
     }
 
+    this.webSocketChannels.push(...(instance.channels ?? []));
+
     for (const route of instance.routes ?? []) {
       this.router.registerRoute(
         route.path,
@@ -324,6 +327,8 @@ export class Server implements Disposable {
       this.router.registerController(controller);
     }
 
+    this.webSocketChannels.push(...(plugin.channels ?? []));
+
     for (const route of plugin.routes ?? []) {
       this.router.registerRoute(
         route.path,
@@ -346,7 +351,7 @@ export class Server implements Disposable {
       VERSION.includes('beta') ||
       VERSION.includes('rc')
     ) {
-      this.logger.warn('Using a pre-release version of SwayKit');
+      this.logger.warn('Using a pre-release version of SwayKit Core');
     }
 
     if (
@@ -426,6 +431,8 @@ export class Server implements Disposable {
       for (const controller of this.options.controllers ?? []) {
         this.router.registerController(controller);
       }
+
+      this.webSocketChannels.push(...(this.options.channels ?? []));
 
       for (const route of this.options.routes ?? []) {
         this.router.registerRoute(

@@ -1,7 +1,11 @@
 import { Reflector } from '../utils/reflector.class.ts';
 
-export abstract class Broadcaster {
+export abstract class Channel {
   public readonly activeSockets = new Map<string, WebSocket>();
+
+  public authorize(_socket: WebSocket): boolean | Promise<boolean> {
+    return true;
+  }
 
   public broadcast(
     payload: Record<string, unknown> = {},

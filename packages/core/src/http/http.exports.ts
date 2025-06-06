@@ -4,6 +4,7 @@ export * from './enums/http-status.enum.ts';
 export * from './http-client.service.ts';
 export * from './http-error.class.ts';
 export * from './html-response.class.ts';
+export * from './interfaces/authorizer.interface.ts';
 export * from './json-response.class.ts';
 export * from './request.class.ts';
 export * from './response.class.ts';
