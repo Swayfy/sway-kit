@@ -307,8 +307,8 @@ export class Server implements Disposable {
       );
     }
 
-    for (const submodule of instance.submodules ?? []) {
-      this.registerModule(submodule);
+    for (const importedModule of instance.imports ?? []) {
+      this.registerModule(importedModule);
     }
   }
 

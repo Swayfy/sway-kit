@@ -6,6 +6,6 @@ import { Route } from '../../router/interfaces/route.interface.ts';
 export interface Module {
   readonly channels?: Constructor<Channel>[];
   readonly controllers?: Constructor<Controller>[];
+  readonly imports?: Constructor<Module>[];
   readonly routes?: Route[];
-  readonly submodules?: Constructor<Module>[];
 }
