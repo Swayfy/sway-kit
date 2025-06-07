@@ -325,11 +325,8 @@ export class Router {
             ? destination
             : `${this.baseUrl()}${destination}`;
 
-          if ((body as RedirectResponse).statusCode) {
-            statusCode = (body as RedirectResponse).statusCode;
-          } else {
-            statusCode = HttpStatus.Found;
-          }
+          statusCode =
+            (body as RedirectResponse).statusCode ?? HttpStatus.Found;
 
           break;
         }

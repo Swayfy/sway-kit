@@ -12,12 +12,13 @@ import { Channel } from '../web-socket/channel.class.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
 import { debounce } from '../utils/functions/debounce.function.ts';
 import { Encrypter } from '../crypto/encrypter.service.ts';
+import { ErrorHandler } from '../error/error-handler.service.ts';
 import { HotReloadChannel } from './channels/hot-reload.channel.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
-import { ErrorHandler } from '../error/error-handler.service.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
 import { Logger } from '../logger/logger.service.ts';
 import { Module } from './interfaces/module.interface.ts';
+import { OS, VERSION } from '../constants.ts';
 import { Plugin } from './interfaces/plugin.interface.ts';
 import { Reflector } from '../utils/reflector.class.ts';
 import { Request } from '../http/request.class.ts';
@@ -25,11 +26,10 @@ import { resolve } from '../injector/functions/resolve.function.ts';
 import { Router } from '../router/router.service.ts';
 import { ServerOptions } from './interfaces/server-options.interface.ts';
 import { StateManager } from '../state/state-manager.service.ts';
-import { OS, VERSION } from '../constants.ts';
 import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
 import { Utils } from '../utils/utils.class.ts';
 
-enum WebClientAlias {
+enum SystemWebClientAlias {
   darwin = 'open',
   linux = 'xdg-open',
   win32 = 'start',
@@ -372,7 +372,8 @@ export class Server implements Disposable {
       try {
         await $(
           `${
-            WebClientAlias[OS as keyof typeof WebClientAlias] ?? 'open'
+            SystemWebClientAlias[OS as keyof typeof SystemWebClientAlias] ??
+            'open'
           } ${this.router.baseUrl()}`,
         );
       } finally {
