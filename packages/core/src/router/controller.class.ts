@@ -2,6 +2,7 @@ import { DownloadResponse } from '../http/download-response.class.ts';
 import { HtmlResponse } from '../http/html-response.class.ts';
 import { HttpStatus } from '../http/enums/http-status.enum.ts';
 import { JsonResponse } from '../http/json-response.class.ts';
+import { RedirectBackResponse } from '../http/redirect-back-response.class.ts';
 import { RedirectResponse } from '../http/redirect-response.class.ts';
 import { RoutePath } from './types/route-path.type.ts';
 import { Url } from './types/url.type.ts';
@@ -29,6 +30,13 @@ export abstract class Controller {
     statusCode?: HttpStatus,
   ): RedirectResponse {
     return new RedirectResponse(destination, statusCode);
+  }
+
+  public redirectBack(
+    fallback?: RoutePath | Url,
+    statusCode?: HttpStatus,
+  ): RedirectBackResponse {
+    return new RedirectBackResponse(fallback, statusCode);
   }
 
   public async render(

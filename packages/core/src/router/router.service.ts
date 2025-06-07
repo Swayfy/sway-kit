@@ -14,6 +14,7 @@ import { JsonResponse } from '../http/json-response.class.ts';
 import { EnumValuesUnion } from '../utils/types/enum-values-union.type.ts';
 import { MethodDecorator } from '../utils/types/method-decorator.type.ts';
 import { Middleware } from './interfaces/middleware.interface.ts';
+import { RedirectBackResponse } from '../http/redirect-back-response.class.ts';
 import { RedirectResponse } from '../http/redirect-response.class.ts';
 import { Reflector } from '../utils/reflector.class.ts';
 import { Request } from '../http/request.class.ts';
@@ -314,6 +315,24 @@ export class Router {
           if ((body as JsonResponse).statusCode) {
             statusCode = (body as JsonResponse).statusCode;
           }
+
+          break;
+        }
+
+        case body instanceof RedirectBackResponse: {
+          const fallback = (body as RedirectBackResponse).fallback ?? '/';
+          const referrer = request.header('referer');
+
+          if (referrer) {
+            additionalHeaders['location'] = referrer;
+          } else {
+            additionalHeaders['location'] = this.urlRegexp.test(fallback)
+              ? fallback
+              : `${this.baseUrl()}${fallback}`;
+          }
+
+          statusCode =
+            (body as RedirectBackResponse).statusCode ?? HttpStatus.Found;
 
           break;
         }
