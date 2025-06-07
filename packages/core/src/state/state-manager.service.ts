@@ -1,6 +1,6 @@
 import { AppConfig } from './interfaces/app-config.interface.ts';
 import { DeepPartial } from '../utils/types/deep-partial.type.ts';
-import { EnvVariable } from '../utils/types/env-variable.type.ts';
+import { env } from './functions/env.function.ts';
 import { Utils } from '../utils/utils.class.ts';
 
 export class StateManager {
@@ -26,23 +26,6 @@ export class StateManager {
       ) {
         throw new Error('TLS configuration files must be in PEM format');
       }
-    }
-  }
-
-  public getEnv<TValue extends EnvVariable>(
-    key: string,
-    defaultValue?: TValue,
-  ): TValue | undefined {
-    if (!(key in process.env)) {
-      return defaultValue;
-    }
-
-    try {
-      return JSON.parse(process.env[key]?.toString() ?? 'null') as
-        | TValue
-        | undefined;
-    } catch {
-      return process.env[key] as TValue;
     }
   }
 
@@ -75,7 +58,7 @@ export class StateManager {
           enabled: true,
         },
         cookies: {
-          maxAge: this.getEnv<number>('COOKIE_MAX_AGE') ?? 30,
+          maxAge: env<number>('COOKIE_MAX_AGE') ?? 30,
         },
         cors: {
           allowCredentials: false,
@@ -86,15 +69,15 @@ export class StateManager {
           maxAge: 0,
         },
         encryption: {
-          key: this.getEnv<string>('ENCRYPTION_KEY') ?? crypto.randomUUID(),
+          key: env<string>('ENCRYPTION_KEY') ?? crypto.randomUUID(),
         },
-        host: this.getEnv<string>('HOST') ?? 'localhost',
+        host: env<string>('HOST') ?? 'localhost',
         hotReload: {
           enabled: true,
           watchSourceChanges: true,
         },
-        http2: this.getEnv<boolean>('HTTP_2') ?? false,
-        isProduction: this.getEnv<boolean>('PRODUCTION') ?? false,
+        http2: env<boolean>('HTTP_2') ?? false,
+        isProduction: env<boolean>('PRODUCTION') ?? false,
         logger: {
           enabled: true,
           staticFileRequests: false,
@@ -102,14 +85,14 @@ export class StateManager {
         poweredByHeader: false,
         staticFilesDirectory: 'public',
         tls: {
-          certFile: this.getEnv<string>('TLS_CERT') ?? 'cert.pem',
-          enabled: false,
-          keyFile: this.getEnv<string>('TLS_KEY') ?? 'key.pem',
+          certFile: env<string>('TLS_CERT') ?? 'cert.pem',
+          enabled: env<boolean>('TLS') ?? false,
+          keyFile: env<string>('TLS_KEY') ?? 'key.pem',
         },
-        port: this.getEnv<number>('PORT') ?? 5000,
+        port: env<number>('PORT') ?? 5000,
         webSocket: {
           enabled: true,
-          port: this.getEnv<number>('WEB_SOCKET_PORT') ?? 6000,
+          port: env<number>('WEB_SOCKET_PORT') ?? 6000,
         },
       };
     }
