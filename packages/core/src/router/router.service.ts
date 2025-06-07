@@ -5,13 +5,16 @@ import { CONTENT_TYPES } from './constants.ts';
 import { Controller } from './controller.class.ts';
 import { DownloadResponse } from '../http/download-response.class.ts';
 import { ErrorHandler } from '../error/error-handler.service.ts';
+import { HtmlResponse } from '../http/html-response.class.ts';
 import { HttpError } from '../http/http-error.class.ts';
 import { HttpMethod } from '../http/enums/http-method.enum.ts';
 import { HttpStatus } from '../http/enums/http-status.enum.ts';
 import { Inject } from '../injector/decorators/inject.decorator.ts';
+import { JsonResponse } from '../http/json-response.class.ts';
 import { EnumValuesUnion } from '../utils/types/enum-values-union.type.ts';
 import { MethodDecorator } from '../utils/types/method-decorator.type.ts';
 import { Middleware } from './interfaces/middleware.interface.ts';
+import { RedirectResponse } from '../http/redirect-response.class.ts';
 import { Reflector } from '../utils/reflector.class.ts';
 import { Request } from '../http/request.class.ts';
 import { Response } from '../http/response.class.ts';
@@ -20,11 +23,9 @@ import { Route } from './interfaces/route.interface.ts';
 import { RouteOptions } from './interfaces/route-options.interface.ts';
 import { RoutePath } from './types/route-path.type.ts';
 import { StateManager } from '../state/state-manager.service.ts';
-import { Url } from './types/url.type.ts';
 import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
-import { JsonResponse } from '../http/json-response.class.ts';
+import { Url } from './types/url.type.ts';
 import { ViewResponse } from '../http/view-response.class.ts';
-import { HtmlResponse } from '../http/html-response.class.ts';
 
 interface ResponseOptions {
   cookies?: Record<string, string>;
@@ -45,6 +46,9 @@ type ContentType = `${string}/${string}`;
 
 @Inject([ErrorHandler, StateManager])
 export class Router {
+  private readonly urlRegexp =
+    /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi;
+
   private httpErrorHandler?: (
     statusCode: HttpStatus,
     message: string,
@@ -309,6 +313,22 @@ export class Router {
 
           if ((body as JsonResponse).statusCode) {
             statusCode = (body as JsonResponse).statusCode;
+          }
+
+          break;
+        }
+
+        case body instanceof RedirectResponse: {
+          const destination = (body as RedirectResponse).destination;
+
+          additionalHeaders['location'] = this.urlRegexp.test(destination)
+            ? destination
+            : `${this.baseUrl()}${destination}`;
+
+          if ((body as RedirectResponse).statusCode) {
+            statusCode = (body as RedirectResponse).statusCode;
+          } else {
+            statusCode = HttpStatus.Found;
           }
 
           break;
