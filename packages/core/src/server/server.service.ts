@@ -47,6 +47,10 @@ export class Server implements Disposable {
 
   private server?: http.Server | http2.Http2SecureServer | https.Server;
 
+  private tlsCert?: string;
+
+  private tlsKey?: string;
+
   private readonly webSocketChannels: Constructor<Channel>[] = [];
 
   private webSocketServer?: WebSocketServer;
@@ -93,9 +97,23 @@ export class Server implements Disposable {
         });
       });
     } else {
-      this.webSocketServer = new WebSocketServer({
-        port: this.stateManager.state.webSocket.port,
-      });
+      if (this.stateManager.state.tls.enabled) {
+        const tlsServer = https.createServer({
+          cert: this.tlsCert,
+          key: this.tlsKey,
+        });
+
+        this.webSocketServer = new WebSocketServer({
+          port: this.stateManager.state.webSocket.port,
+          server: tlsServer,
+        });
+
+        tlsServer.listen(this.stateManager.state.webSocket.port);
+      } else {
+        this.webSocketServer = new WebSocketServer({
+          port: this.stateManager.state.webSocket.port,
+        });
+      }
     }
 
     this.webSocketServer!.on('connection', (socket: WebSocket) => {
@@ -177,7 +195,7 @@ export class Server implements Disposable {
           `WebSocket server is running on ${
             this.stateManager.state.isProduction
               ? `port ${util.styleText(['bold'], String(this.stateManager.state.webSocket.port))}`
-              : `${util.styleText(['bold'], `ws://${this.stateManager.state.host}:${String(this.stateManager.state.webSocket.port)}`)}`
+              : `${util.styleText(['bold'], `${this.stateManager.state.tls.enabled ? 'wss' : 'ws'}://${this.stateManager.state.host}:${String(this.stateManager.state.webSocket.port)}`)}`
           }`,
         );
       }
@@ -487,24 +505,23 @@ export class Server implements Disposable {
         this.stateManager.state.port,
       );
 
-      let tlsCert = '';
-      let tlsKey = '';
-
       if (
         this.stateManager.state.http2 ||
         this.stateManager.state.tls.enabled
       ) {
         try {
-          tlsCert = await fsp.readFile(
+          this.tlsCert = await fsp.readFile(
             this.stateManager.state.tls.certFile,
             'utf8',
           );
 
-          tlsKey = await fsp.readFile(
+          this.tlsKey = await fsp.readFile(
             this.stateManager.state.tls.keyFile,
             'utf8',
           );
         } catch (error) {
+          this.stateManager.state.tls.enabled = false;
+
           throw new Error('Failed to load TLS key or certificate');
         }
       }
@@ -513,16 +530,16 @@ export class Server implements Disposable {
         this.server = http2.createSecureServer(
           {
             allowHTTP1: true,
-            cert: tlsCert,
-            key: tlsKey,
+            cert: this.tlsCert,
+            key: this.tlsKey,
           },
           this.handleRequest.bind(this),
         );
       } else if (this.stateManager.state.tls.enabled) {
         this.server = https.createServer(
           {
-            cert: tlsCert,
-            key: tlsKey,
+            cert: this.tlsCert,
+            key: this.tlsKey,
           },
           this.handleRequest.bind(this),
         );
@@ -538,7 +555,7 @@ export class Server implements Disposable {
       );
 
       this.logger.info(
-        `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
+        `${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'HTTPS' : ''}${this.stateManager.state.http2 ? 'HTTP/2' : ''} server is running on ${
           this.stateManager.state.isProduction
             ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
             : `${util.styleText(['bold'], this.router.baseUrl())}`
