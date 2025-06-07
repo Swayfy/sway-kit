@@ -15,7 +15,7 @@ export class Logger {
       return;
     }
 
-    console.log(util.styleText('blue', message));
+    console.info(util.styleText('blue', message));
   }
 
   public error(message: string): void {
@@ -35,7 +35,7 @@ export class Logger {
       return;
     }
 
-    console.log(util.styleText('green', message));
+    console.info(util.styleText('green', message));
   }
 
   public table(data: unknown): void {
