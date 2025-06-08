@@ -15,7 +15,7 @@ export class ViewResponse {
       : path.join('views', `${this.view.replaceAll(/[/\\]/g, path.sep)}.html`);
   }
 
-  private async assertFileExists(): Promise<void> {
+  public async assertFileExists(): Promise<void> {
     try {
       await fs.stat(this.file);
     } catch (error) {
@@ -28,19 +28,6 @@ export class ViewResponse {
   public async content(): Promise<string> {
     await this.assertFileExists();
 
-    const content = await fs.readFile(this.file, 'utf-8');
-
-    const rendered = content.replaceAll(
-      /{{\s*([a-zA-Z0-9_]+)\s*}}/g,
-      (_, key) => {
-        if (key in this.data) {
-          return String(this.data[key]);
-        }
-
-        throw new Error(`Missing variable "${key}" in view ${this.view}`);
-      },
-    );
-
-    return rendered;
+    return await fs.readFile(this.file, 'utf-8');
   }
 }

@@ -26,6 +26,7 @@ export default defineConfig({
               server: './src/server/server.exports.ts',
               state: './src/state/state.exports.ts',
               utils: './src/utils/utils.exports.ts',
+              view: './src/view/view.exports.ts',
               'web-socket': './src/web-socket/web-socket.exports.ts',
             }),
       },

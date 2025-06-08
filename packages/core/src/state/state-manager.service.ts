@@ -36,7 +36,7 @@ export class StateManager {
     return (this.state[entry] as TValue) ?? defaultValue;
   }
 
-  public setup(configuration: DeepPartial<AppConfig> = {}): this {
+  public setup(configuration: DeepPartial<AppConfig>): this {
     this.configuration = Utils.mergeDeep(this.state, configuration);
 
     this.validateConfiguration();
@@ -91,7 +91,7 @@ export class StateManager {
         },
         port: env<number>('PORT') ?? 5000,
         webSocket: {
-          enabled: true,
+          enabled: env<boolean>('WEB_SOCKET') ?? true,
           port: env<number>('WEB_SOCKET_PORT') ?? 6000,
         },
       };

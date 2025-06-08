@@ -26,6 +26,7 @@ import { RoutePath } from './types/route-path.type.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
 import { Url } from './types/url.type.ts';
+import { ViewRenderer } from '../view/view-renderer.service.ts';
 import { ViewResponse } from '../http/view-response.class.ts';
 
 interface ResponseOptions {
@@ -45,7 +46,7 @@ type RouteDecoratorFunction<THttpMethods> =
 
 type ContentType = `${string}/${string}`;
 
-@Inject([ErrorHandler, StateManager])
+@Inject([ErrorHandler, StateManager, ViewRenderer])
 export class Router {
   private readonly urlRegexp =
     /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi;
@@ -58,6 +59,7 @@ export class Router {
   constructor(
     private readonly errorHandler: ErrorHandler,
     private readonly stateManager: StateManager,
+    private readonly viewRenderer: ViewRenderer,
   ) {}
 
   private readonly routes: Route[] = [];
@@ -251,8 +253,8 @@ export class Router {
     }
 
     if (body instanceof Response) {
-      body = (body as Response).content;
-      statusCode = (body as Response).statusCode;
+      statusCode = body.statusCode;
+      body = body.content;
     }
 
     if (body !== null) {
@@ -282,44 +284,46 @@ export class Router {
         }
 
         case body instanceof DownloadResponse: {
-          body = JSON.stringify((body as DownloadResponse).content);
-          contentType = 'application/octet-stream';
-
           additionalHeaders['content-disposition'] = `attachment; filename="${
-            (body as DownloadResponse).filename ?? 'download'
+            body.filename ?? 'download'
           }"`;
 
-          if ((body as DownloadResponse).statusCode) {
-            statusCode = (body as DownloadResponse).statusCode;
+          if (body.statusCode) {
+            statusCode = body.statusCode;
           }
+
+          body = JSON.stringify(body.content);
+          contentType = 'application/octet-stream';
 
           break;
         }
 
         case body instanceof HtmlResponse: {
-          body = String((body as HtmlResponse).content);
-          contentType = 'text/html';
-
-          if ((body as HtmlResponse).statusCode) {
-            statusCode = (body as HtmlResponse).statusCode;
+          if (body.statusCode) {
+            statusCode = body.statusCode;
           }
+
+          body = String(body.content);
+          contentType = 'text/html';
 
           break;
         }
 
         case body instanceof JsonResponse: {
-          body = JSON.stringify((body as JsonResponse).content);
-          contentType = 'application/json';
-
-          if ((body as JsonResponse).statusCode) {
-            statusCode = (body as JsonResponse).statusCode;
+          if (body.statusCode) {
+            statusCode = body.statusCode;
           }
+
+          body = JSON.stringify(body.content);
+          contentType = 'application/json';
 
           break;
         }
 
         case body instanceof RedirectBackResponse: {
-          const fallback = (body as RedirectBackResponse).fallback ?? '/';
+          statusCode = body.statusCode ?? HttpStatus.Found;
+
+          const fallback = body.fallback ?? '/';
           const referrer = request.header('referer');
 
           if (referrer) {
@@ -330,33 +334,38 @@ export class Router {
               : `${this.baseUrl()}${fallback}`;
           }
 
-          statusCode =
-            (body as RedirectBackResponse).statusCode ?? HttpStatus.Found;
-
           break;
         }
 
         case body instanceof RedirectResponse: {
+          statusCode = body.statusCode ?? HttpStatus.Found;
+
           const destination = (body as RedirectResponse).destination;
 
           additionalHeaders['location'] = this.urlRegexp.test(destination)
             ? destination
             : `${this.baseUrl()}${destination}`;
 
-          statusCode =
-            (body as RedirectResponse).statusCode ?? HttpStatus.Found;
-
           break;
         }
 
         case body instanceof ViewResponse: {
-          body = await (body as ViewResponse).content();
+          if (body.statusCode) {
+            statusCode = body.statusCode;
+          }
+
+          await body.assertFileExists();
+
+          const template = await body.content();
+
+          body = await this.viewRenderer.render(
+            template,
+            body.data,
+            body.view,
+            request,
+          );
 
           contentType = 'text/html';
-
-          if ((body as ViewResponse).statusCode) {
-            statusCode = (body as ViewResponse).statusCode;
-          }
 
           break;
         }

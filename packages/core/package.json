@@ -48,6 +48,10 @@
       "import": "./build/utils.js",
       "types": "./build/utils.d.ts"
     },
+    "./view": {
+      "import": "./build/view.js",
+      "types": "./build/view.d.ts"
+    },
     "./web-socket": {
       "import": "./build/web-socket.js",
       "types": "./build/web-socket.d.ts"
