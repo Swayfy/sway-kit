@@ -16,7 +16,8 @@ export class Request {
 
   private incomingBody: Record<string, any> = {};
 
-  private incomingFiles: Record<string, RequestFile | RequestFile[] | null> = {};
+  private incomingFiles: Record<string, RequestFile | RequestFile[] | null> =
+    {};
 
   private readonly nativeInstance:
     | http.IncomingMessage

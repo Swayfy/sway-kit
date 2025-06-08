@@ -1,5 +1,4 @@
 export * from './constants.ts';
-export * from './vite-config-defaults.ts';
 
 export * from './crypto/crypto.exports.ts';
 export * from './error/error.exports.ts';

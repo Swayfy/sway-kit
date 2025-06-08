@@ -6,14 +6,54 @@
   "exports": {
     ".": {
       "import": "./build/exports.js",
-      "types": "./build/index.d.ts"
+      "types": "./build/exports.d.ts"
     },
     "./vite": {
-      "import": "./build/vite-config-defaults.js",
-      "types": "./build/index.d.ts"
+      "import": "./build/vite.js",
+      "types": "./build/vite.d.ts"
+    },
+    "./crypto": {
+      "import": "./build/crypto.js",
+      "types": "./build/crypto.d.ts"
+    },
+    "./error": {
+      "import": "./build/error.js",
+      "types": "./build/error.d.ts"
+    },
+    "./http": {
+      "import": "./build/http.js",
+      "types": "./build/http.d.ts"
+    },
+    "./injector": {
+      "import": "./build/injector.js",
+      "types": "./build/injector.d.ts"
+    },
+    "./logger": {
+      "import": "./build/logger.js",
+      "types": "./build/logger.d.ts"
+    },
+    "./router": {
+      "import": "./build/router.js",
+      "types": "./build/router.d.ts"
+    },
+    "./server": {
+      "import": "./build/server.js",
+      "types": "./build/server.d.ts"
+    },
+    "./state": {
+      "import": "./build/state.js",
+      "types": "./build/state.d.ts"
+    },
+    "./utils": {
+      "import": "./build/utils.js",
+      "types": "./build/utils.d.ts"
+    },
+    "./web-socket": {
+      "import": "./build/web-socket.js",
+      "types": "./build/web-socket.d.ts"
     }
   },
-  "types": "./build/index.d.ts",
+  "types": "./build/exports.d.ts",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -29,6 +69,7 @@
   "license": "MIT",
   "scripts": {
     "build": "vite build",
+    "build:dev": "vite build -- --dev",
     "build:watch": "vite build --watch",
     "dev": "build:watch",
     "format": "prettier --write ."
