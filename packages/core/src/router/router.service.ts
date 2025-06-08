@@ -158,6 +158,7 @@ export class Router {
       'strict-transport-security': 'max-age=31536000; includeSubDomains',
       'x-content-type-options': 'nosniff',
       'x-dns-prefetch-control': 'off',
+      'x-download-options': 'noopen',
       'x-xss-protection': '0',
       ...corsHeaders,
     };
