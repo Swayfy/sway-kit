@@ -36,7 +36,7 @@ enum SystemWebClientAlias {
 }
 
 @Inject([Encrypter, ErrorHandler, Logger, Router, StateManager])
-export class Server implements Disposable {
+export class Server {
   private readonly exitSignals: NodeJS.Signals[] = [
     'SIGINT',
     'SIGQUIT',
@@ -568,9 +568,5 @@ export class Server implements Disposable {
     } catch (error) {
       this.errorHandler.handle(error as Error);
     }
-  }
-
-  public [Symbol.dispose](): void {
-    this.logger.warn('Server has terminated');
   }
 }
