@@ -413,7 +413,7 @@ export class Server {
       } finally {
         await fsp.writeFile(
           path.join(this.tempDirectoryPath, 'server.log'),
-          'Development server is up\n',
+          `${Date.now()}\n`,
           'utf8',
         );
       }
@@ -457,14 +457,6 @@ export class Server {
         });
       }
     }
-
-    this.addExitSignalListener(async () => {
-      try {
-        await fsp.unlink(path.join('node_modules', '.sway-temp', 'server.log'));
-      } finally {
-        process.exit();
-      }
-    });
   }
 
   private setupProductionEnvironment(): void {
@@ -551,8 +543,6 @@ export class Server {
       } else {
         this.server = http.createServer(this.handleRequest.bind(this));
       }
-
-      this.addExitSignalListener(process.exit);
 
       this.server.listen(
         this.stateManager.state.port,
