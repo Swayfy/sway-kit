@@ -197,7 +197,10 @@ export class Server {
           `WebSocket server is running on ${
             this.stateManager.state.isProduction
               ? `port ${util.styleText(['bold'], String(this.stateManager.state.webSocket.port))}`
-              : `${util.styleText(['bold'], `${this.stateManager.state.tls.enabled ? 'wss' : 'ws'}://${this.stateManager.state.host}:${String(this.stateManager.state.webSocket.port)}`)}`
+              : `${util.styleText(
+                  ['bold'],
+                  `${this.stateManager.state.tls.enabled ? 'wss' : 'ws'}://${this.stateManager.state.host}:${String(this.stateManager.state.webSocket.port)}`,
+                )}`
           }`,
         );
       }
@@ -550,11 +553,18 @@ export class Server {
       );
 
       this.logger.info(
-        `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
+        `${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'HTTPS' : 'HTTP'}${this.stateManager.state.http2 ? 'HTTP/2' : ''} server is running on ${
           this.stateManager.state.isProduction
             ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
             : `${util.styleText(['bold'], this.router.baseUrl())}`
-        }${this.stateManager.state.isProduction ? '' : util.styleText(['white', 'dim'], ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`)}`,
+        }${
+          this.stateManager.state.isProduction
+            ? ''
+            : util.styleText(
+                ['white', 'dim'],
+                ` [${process.platform === 'darwin' ? '⌃C' : 'Ctrl+C'} to quit]`,
+              )
+        }`,
       );
 
       if (this.stateManager.state.webSocket?.enabled) {
