@@ -555,7 +555,7 @@ export class Server implements Disposable {
       );
 
       this.logger.info(
-        `${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'HTTPS' : ''}${this.stateManager.state.http2 ? 'HTTP/2' : ''} server is running on ${
+        `HTTP${this.stateManager.state.tls.enabled && !this.stateManager.state.http2 ? 'S' : ''}${this.stateManager.state.http2 ? '/2' : ''} server is running on ${
           this.stateManager.state.isProduction
             ? `port ${util.styleText(['bold'], String(this.stateManager.state.port))}`
             : `${util.styleText(['bold'], this.router.baseUrl())}`
