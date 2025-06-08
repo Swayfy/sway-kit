@@ -178,9 +178,7 @@ export class Router {
               (this.stateManager.state.cache.maxAge * 24 * TimeUnit.Hour) / 1000
             }`
           : 'no-cache',
-      ...(this.stateManager.state.poweredByHeader && {
-        'x-powered-by': 'SwayKit Core',
-      }),
+      ...this.stateManager.state.globalHeaders,
       ...additionalHeaders,
     };
 

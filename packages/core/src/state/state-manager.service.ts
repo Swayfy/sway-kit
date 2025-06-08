@@ -71,6 +71,7 @@ export class StateManager {
         encryption: {
           key: env<string>('ENCRYPTION_KEY') ?? crypto.randomUUID(),
         },
+        globalHeaders: {},
         host: env<string>('HOST') ?? 'localhost',
         hotReload: {
           enabled: true,
@@ -82,7 +83,6 @@ export class StateManager {
           enabled: true,
           staticFileRequests: false,
         },
-        poweredByHeader: false,
         staticFilesDirectory: 'public',
         tls: {
           certFile: env<string>('TLS_CERT') ?? 'cert.pem',

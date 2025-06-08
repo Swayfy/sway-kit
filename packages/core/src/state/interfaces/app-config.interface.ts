@@ -23,6 +23,7 @@ export interface AppConfig {
   encryption: {
     key: string;
   };
+  globalHeaders: Record<string, string>;
   host: string;
   hotReload: {
     enabled: boolean;
@@ -34,7 +35,6 @@ export interface AppConfig {
     enabled: boolean;
     staticFileRequests: boolean;
   };
-  poweredByHeader: boolean;
   staticFilesDirectory: string;
   tls: {
     certFile: string;
