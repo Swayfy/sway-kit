@@ -58,7 +58,8 @@
     "node": ">=24.0.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "latest"
   },
   "repository": {
     "type": "git",
