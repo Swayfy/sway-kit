@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Roboto+Mono&family=Manrope:wght@400..700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400..700&family=Manrope:wght@400..700&display=swap"
       rel="stylesheet"
     />
 
@@ -45,7 +45,8 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        width: clamp(300px, 50vw, 800px);
+        width: clamp(600px, 50vw, 1200px);
+        box-shadow: 0 0 42px 1px #0a0a0d39;
       }
 
       .error {
@@ -54,12 +55,45 @@
         background: #f25081;
         padding: 4px 10px;
         border-radius: 20px;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
+        font-size: 0.9rem;
         align-self: flex-start;
       }
 
       .info {
         opacity: 0.7;
+      }
+
+      .snippet {
+        margin-top: 24px;
+        font-size: 0.8rem;
+      }
+
+      code {
+        width: 100%;
+        display: block;
+        font-family: 'Roboto Mono', monospace;
+        line-height: 2.1;
+        color: #c4c4d2;
+        display: flex;
+      }
+
+      .line-number {
+        padding: 2px 8px;
+        display: block;
+        width: 48px;
+        opacity: 0.6;
+        font-weight: 600;
+        margin-right: 14px;
+        background: #292c36;
+        color: #ececf3;
+        font-family: 'Roboto Mono', monospace;
+      }
+
+      .error-highlight {
+        background: #f2508148;
+        color: #df235c;
+        font-weight: 700;
       }
     </style>
   </head>
@@ -71,7 +105,11 @@
 
         <h1 class="message">{{ message }}</h1>
 
-        <p class="info">{{ file }} at line {{ line }}</p>
+        <p class="info">
+          in <strong>{{ file }}</strong> at line <strong>{{ line }}</strong>
+        </p>
+
+        <pre class="snippet">{{ codeSnippet }}</pre>
       </div>
     </main>
   </body>

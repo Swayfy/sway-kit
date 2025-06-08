@@ -678,8 +678,20 @@ export class Router {
         request,
         new ViewResponse('@node_modules/@sway-kit/core/views/error', {
           message: (error as Error).message,
+          codeSnippet: fileContent
+            ?.split('\n')
+            .map(
+              (codeLine, index) =>
+                `<code${++index === line ? ' class="error-highlight"' : ''}><span class="line-number">${index}</span> ${codeLine}</code>`,
+            )
+            .slice(
+              line && line >= 3 ? line - 3 : 0,
+              line && line + 3 <= fileContent?.split('\n').length
+                ? line + 3
+                : undefined,
+            )
+            .join(''),
           file,
-          fileContent,
           line,
           symbol,
         }),
