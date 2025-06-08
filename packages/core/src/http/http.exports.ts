@@ -9,5 +9,6 @@ export * from './json-response.class.ts';
 export * from './redirect-back-response.class.ts';
 export * from './redirect-response.class.ts';
 export * from './request.class.ts';
+export * from './request-file.class.ts';
 export * from './response.class.ts';
 export * from './view-response.class.ts';

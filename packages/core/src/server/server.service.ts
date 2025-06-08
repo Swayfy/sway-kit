@@ -47,6 +47,8 @@ export class Server {
 
   private server?: http.Server | http2.Http2SecureServer | https.Server;
 
+  private readonly tempDirectoryPath = path.join('node_modules', '.sway-temp');
+
   private tlsCert?: string;
 
   private tlsKey?: string;
@@ -233,7 +235,7 @@ export class Server {
 
     const richRequest = new Request(request);
 
-    await richRequest.onReady();
+    await richRequest.$load();
 
     const { content, headers, statusCode } =
       await this.router.respond(richRequest);
@@ -374,6 +376,20 @@ export class Server {
     return this;
   }
 
+  private async setupCommonEnvironment(): Promise<void> {
+    this.stateManager.setup(this.options.config ?? {});
+
+    if (!fs.existsSync(this.tempDirectoryPath)) {
+      await fsp.mkdir(this.tempDirectoryPath, {
+        recursive: true,
+      });
+    }
+
+    this.stateManager.state.port = await this.findAvailablePort(
+      this.stateManager.state.port,
+    );
+  }
+
   private async setupDevelopmentEnvironment(): Promise<void> {
     if (
       VERSION.includes('alpha') ||
@@ -385,7 +401,7 @@ export class Server {
 
     if (
       process.argv[2] === '--open' &&
-      !fs.existsSync(path.join('node_modules', '.sway-temp'))
+      !fs.existsSync(path.join(this.tempDirectoryPath, 'server.log'))
     ) {
       try {
         await $(
@@ -395,12 +411,8 @@ export class Server {
           } ${this.router.baseUrl()}`,
         );
       } finally {
-        await fsp.mkdir(path.join('node_modules', '.sway-temp'), {
-          recursive: true,
-        });
-
         await fsp.writeFile(
-          path.join('node_modules', '.sway-temp', 'server'),
+          path.join(this.tempDirectoryPath, 'server.log'),
           'Development server is up\n',
           'utf8',
         );
@@ -448,10 +460,7 @@ export class Server {
 
     this.addExitSignalListener(async () => {
       try {
-        await fsp.rm(path.join('node_modules', '.sway-temp'), {
-          recursive: true,
-          force: true,
-        });
+        await fsp.unlink(path.join('node_modules', '.sway-temp', 'server.log'));
       } finally {
         process.exit();
       }
@@ -472,7 +481,7 @@ export class Server {
 
   public async start(): Promise<void> {
     try {
-      this.stateManager.setup(this.options.config ?? {});
+      await this.setupCommonEnvironment();
 
       this.stateManager.state.isProduction
         ? this.setupProductionEnvironment()
@@ -500,10 +509,6 @@ export class Server {
       for (const plugin of this.options.plugins ?? []) {
         await this.registerPlugin(plugin);
       }
-
-      this.stateManager.state.port = await this.findAvailablePort(
-        this.stateManager.state.port,
-      );
 
       if (
         this.stateManager.state.http2 ||

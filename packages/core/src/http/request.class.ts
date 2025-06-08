@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import http from 'node:http';
 import http2 from 'node:http2';
 import fsp from 'node:fs/promises';
@@ -6,44 +5,18 @@ import { join as joinPath } from 'node:path';
 import formidable, { Fields, Files, File } from 'formidable';
 import { Encrypter } from '../crypto/encrypter.service.ts';
 import { HttpMethod } from './enums/http-method.enum.ts';
+import { RequestFile } from './request-file.class.ts';
 import { resolve } from '../injector/functions/resolve.function.ts';
 import { RoutePath } from '../router/types/route-path.type.ts';
 import { Router } from '../router/router.service.ts';
 import { StateManager } from '../state/state-manager.service.ts';
-
-// @ts-ignore
-File.prototype.store = async (path: string, name?: string) => {
-  const parts = path.split('.');
-
-  const directory = joinPath(...parts);
-
-  if (!fs.existsSync(directory)) {
-    await fsp.mkdir(directory, {
-      recursive: true,
-    });
-  }
-
-  // @ts-ignore
-  const { newFilename, filepath } = this;
-
-  const fileName = name
-    ? `${name}.${newFilename.split('.').pop()}`
-    : newFilename;
-
-  path = joinPath(directory, fileName);
-
-  await fsp.rename(filepath, path);
-
-  // @ts-ignore
-  this.filepath = path;
-};
 
 export class Request {
   private readonly cspNonce = resolve(Encrypter).generateRandomString(24);
 
   private incomingBody: Record<string, any> = {};
 
-  private incomingFiles: Record<string, File | File[]> = {};
+  private incomingFiles: Record<string, RequestFile | RequestFile[] | null> = {};
 
   private readonly nativeInstance:
     | http.IncomingMessage
@@ -57,11 +30,11 @@ export class Request {
     return this.incomingBody;
   }
 
-  public get files(): Record<string, File | File[]> {
+  public get files(): Record<string, RequestFile | RequestFile[] | null> {
     return this.incomingFiles;
   }
 
-  public file(name: string): File | File[] | undefined {
+  public file(name: string): RequestFile | RequestFile[] | null {
     return this.files[name];
   }
 
@@ -182,7 +155,7 @@ export class Request {
     return resolve(Router).baseUrl() + (this.nativeInstance.url ?? '/');
   }
 
-  public async onReady(): Promise<void> {
+  public async $load(): Promise<void> {
     return new Promise((resolve) => {
       if (![HttpMethod.Get, HttpMethod.Head].includes(this.method())) {
         if (this.header('content-type')?.includes('json')) {
@@ -192,7 +165,7 @@ export class Request {
             try {
               body += chunk.toString();
             } catch (error) {
-              throw new Error('Cannot parse incoming request body as JSON');
+              throw new Error('Could not parse incoming request body as JSON');
             }
           });
 
@@ -214,13 +187,26 @@ export class Request {
 
         form.parse(
           this.nativeInstance as http.IncomingMessage,
-          (error: any, fields: Fields, files: Files) => {
+          (error: unknown, fields: Fields, files: Files) => {
             if (error) {
-              throw new Error('Cannot parse incoming request body');
+              throw new Error('Could not parse incoming request body');
             }
 
             this.incomingBody = { ...fields };
-            this.incomingFiles = { ...files } as Record<string, File | File[]>;
+
+            this.incomingFiles = Object.fromEntries(
+              Object.entries(files).map(([name, file]) => {
+                if (file) {
+                  const value = Array.isArray(file)
+                    ? file.map((singleFile) => new RequestFile(singleFile))
+                    : new RequestFile(file);
+
+                  return [name, value];
+                }
+
+                return [name, null];
+              }),
+            );
           },
         );
       }
