@@ -84,6 +84,10 @@ export class Server {
   private async createWebSocketServer(): Promise<void> {
     this.stateManager.state.webSocket.port = await this.findAvailablePort(
       this.stateManager.state.webSocket.port,
+      (this.stateManager.state.hotReload.enabled &&
+        this.webSocketChannels.length === 1) ||
+        (!this.stateManager.state.hotReload.enabled &&
+          this.webSocketChannels.length === 0),
     );
 
     if (
@@ -207,7 +211,10 @@ export class Server {
     });
   }
 
-  private async findAvailablePort(port: number): Promise<number> {
+  private async findAvailablePort(
+    port: number,
+    silent = false,
+  ): Promise<number> {
     const server = net.createServer();
 
     return new Promise((resolve) => {
@@ -218,9 +225,11 @@ export class Server {
           resolve(port);
         })
         .on('error', () => {
-          this.logger.warn(
-            `Port ${port} is already in use. Trying port ${port + 1}...`,
-          );
+          if (!silent) {
+            this.logger.warn(
+              `Port ${port} is already in use. Trying port ${port + 1}...`,
+            );
+          }
 
           port += 1;
 
