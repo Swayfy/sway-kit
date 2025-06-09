@@ -8,6 +8,11 @@ import { kebabCase, pascalCase } from 'case-anything';
 import { Command } from '../interfaces/command.interface.ts';
 
 export class NewCommand implements Command {
+  private readonly readlineApi: readline.Interface = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
   public async handle(
     flags: Record<string, unknown>,
     [, type, name]: string[],
@@ -15,11 +20,6 @@ export class NewCommand implements Command {
     if (['channel', 'controller', 'module'].includes(type)) {
       throw new Error(`Invalid file type`);
     }
-
-    const readlineApi = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
 
     const splittedFileModule = name.split('/');
     const directory =
@@ -29,7 +29,7 @@ export class NewCommand implements Command {
 
     if (!name) {
       name =
-        (await readlineApi.question(
+        (await this.readlineApi.question(
           util.styleText('blue', `Enter ${type} name: `),
         )) || `empty-${type}`;
     }
