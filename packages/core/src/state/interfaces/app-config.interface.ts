@@ -34,6 +34,7 @@ export interface AppConfig {
   logger: {
     enabled: boolean;
     staticFileRequests: boolean;
+    webSocketConnections: boolean;
   };
   staticFilesDirectory: string;
   tls: {

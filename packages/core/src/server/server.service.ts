@@ -6,7 +6,7 @@ import https from 'node:https';
 import net from 'node:net';
 import path from 'node:path';
 import util from 'node:util';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import { $ } from '../utils/functions/$.function.ts';
 import { Channel } from '../web-socket/channel.class.ts';
 import { Constructor } from '../utils/interfaces/constructor.interface.ts';
@@ -28,6 +28,7 @@ import { ServerOptions } from './interfaces/server-options.interface.ts';
 import { StateManager } from '../state/state-manager.service.ts';
 import { TimeUnit } from '../utils/enums/time-unit.enum.ts';
 import { Utils } from '../utils/utils.class.ts';
+import { HttpStatus } from '../exports.ts';
 
 enum SystemWebClientAlias {
   darwin = 'open',
@@ -110,6 +111,7 @@ export class Server {
         });
 
         this.webSocketServer = new WebSocketServer({
+          host: this.stateManager.state.host,
           port: this.stateManager.state.webSocket.port,
           server: tlsServer,
         });
@@ -117,12 +119,15 @@ export class Server {
         tlsServer.listen(this.stateManager.state.webSocket.port);
       } else {
         this.webSocketServer = new WebSocketServer({
+          host: this.stateManager.state.host,
           port: this.stateManager.state.webSocket.port,
         });
       }
     }
 
-    this.webSocketServer!.on('connection', (socket: WebSocket) => {
+    this.webSocketServer.on('connection', (socket: WebSocket) => {
+      this.logger.info('New WebSocket connection');
+
       for (const channel of this.webSocketChannels) {
         const channelInstance = resolve(channel);
         const socketId = this.encrypter.generateUuid();
@@ -163,6 +168,8 @@ export class Server {
                 ? !(await isAuthorized)
                 : !isAuthorized
             ) {
+              socket.close(HttpStatus.Unauthorized);
+
               continue;
             }
 

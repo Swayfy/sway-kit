@@ -1,3 +1,4 @@
+import { WebSocket } from 'ws';
 import { Reflector } from '../utils/reflector.class.ts';
 
 export abstract class Channel {

@@ -82,6 +82,7 @@ export class StateManager {
         logger: {
           enabled: true,
           staticFileRequests: false,
+          webSocketConnections: true,
         },
         staticFilesDirectory: 'public',
         tls: {
