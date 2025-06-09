@@ -1,0 +1,5 @@
+* text=auto
+*.md diff=markdown
+*.ts diff=typescript
+
+/.github export-ignore
