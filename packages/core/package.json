@@ -77,7 +77,8 @@
     "build:dev": "vite build -- --dev",
     "build:watch": "vite build --watch",
     "dev": "build:watch",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

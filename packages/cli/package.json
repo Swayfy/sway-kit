@@ -24,7 +24,8 @@
     "build": "vite build",
     "build:watch": "vite build --watch",
     "dev": "build:watch",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",
