@@ -12,11 +12,27 @@ export class NewCommand implements Command {
     flags: Record<string, unknown>,
     [, type, name]: string[],
   ): Promise<number> {
+    if (['channel', 'controller', 'module'].includes(type)) {
+      throw new Error(`Invalid file type`);
+    }
+
+    const readlineApi = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
     const splittedFileModule = name.split('/');
     const directory =
       splittedFileModule.length > 1
         ? kebabCase(splittedFileModule[0])
         : kebabCase(pluralize(splittedFileModule[0]));
+
+    if (!name) {
+      name =
+        (await readlineApi.question(
+          util.styleText('blue', `Enter ${type} name: `),
+        )) || `empty-${type}`;
+    }
 
     name = singularize(
       splittedFileModule.length > 1
@@ -93,10 +109,6 @@ export class ${pascalCase(name)}Module implements Module {
         );
 
         break;
-      }
-
-      default: {
-        throw new Error(`Invalid file type '${type}'`);
       }
     }
 
