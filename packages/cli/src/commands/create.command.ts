@@ -1,5 +1,5 @@
 import { exec } from 'node:child_process';
-import fs from 'node:fs/promises';
+import fsp from 'node:fs/promises';
 import path from 'node:path';
 import readline from 'node:readline/promises';
 import util from 'node:util';
@@ -9,11 +9,9 @@ import { Command } from '../interfaces/command.interface.ts';
 
 export class CreateCommand implements Command {
   public async handle(
-    args: Record<string, unknown>,
-    positionals: string[],
+    flags: Record<string, unknown>,
+    [, name]: string[],
   ): Promise<number> {
-    let name = positionals[1];
-
     const readlineApi = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
@@ -30,7 +28,7 @@ export class CreateCommand implements Command {
       (await readlineApi.question(
         util.styleText(
           'blue',
-          `What package manager do you use? (${util.styleText(['bold'], 'npm')} / yarn / pnpm) `,
+          `What package manager do you use? (${util.styleText(['bold'], 'npm')}/yarn/pnpm) `,
         ),
       )) || 'npm';
 
@@ -50,9 +48,9 @@ export class CreateCommand implements Command {
 
     await util.promisify(exec)('cp .env.example .env');
 
-    const env = await fs.readFile(path.join(process.cwd(), '.env'), 'utf8');
+    const env = await fsp.readFile(path.join(process.cwd(), '.env'), 'utf8');
 
-    await fs.writeFile(
+    await fsp.writeFile(
       path.join(process.cwd(), '.env'),
       env.replace(
         'ENCRYPTION_KEY=',

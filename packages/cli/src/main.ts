@@ -2,9 +2,10 @@
 
 import packageData from '../package.json' with { type: 'json' };
 import util from 'node:util';
+import { Command } from './interfaces/command.interface.ts';
 import { Constructor } from './interfaces/constructor.interface.ts';
 import { CreateCommand } from './commands/create.command.ts';
-import { Command } from './interfaces/command.interface.ts';
+import { NewCommand } from './commands/new.command.ts';
 
 try {
   const { values, positionals } = util.parseArgs({
@@ -19,6 +20,7 @@ try {
 
   const commands: Record<string, Constructor<Command>> = {
     create: CreateCommand,
+    new: NewCommand,
   };
 
   if (values.version && !positionals.length) {
@@ -38,11 +40,12 @@ try {
     throw new Error(`Unknown command '${commandName}'`);
   }
 
-  const exitCode = await new commands[
-    commandName as keyof typeof commands
-  ]().handle(values, positionals);
+  const result = new commands[commandName as keyof typeof commands]().handle(
+    values,
+    positionals,
+  );
 
-  process.exit(exitCode);
+  process.exit(result instanceof Promise ? await result : result);
 } catch (error) {
   console.error(util.styleText('red', (error as Error).message));
 

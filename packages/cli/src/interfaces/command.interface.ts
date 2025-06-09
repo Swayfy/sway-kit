@@ -1,6 +1,6 @@
 export interface Command {
   handle: (
-    args: Record<string, unknown>,
+    flags: Record<string, unknown>,
     positionals: string[],
   ) => number | Promise<number>;
 }
