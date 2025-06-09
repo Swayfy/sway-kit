@@ -5,6 +5,7 @@ import http2 from 'node:http2';
 import https from 'node:https';
 import net from 'node:net';
 import path from 'node:path';
+import readline from 'node:readline/promises';
 import util from 'node:util';
 import { WebSocketServer, WebSocket } from 'ws';
 import { $ } from '../utils/functions/$.function.ts';
@@ -479,12 +480,17 @@ export class Server {
   }
 
   private setupProductionEnvironment(): void {
-    this.addExitSignalListener(() => {
-      const shouldQuit = confirm(
-        'Are you sure you want to quit production server?',
+    this.addExitSignalListener(async () => {
+      const readlineApi = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+
+      const shouldQuit = await readlineApi.question(
+        'Are you sure you want to quit production server? (y/n) ',
       );
 
-      if (shouldQuit) {
+      if (shouldQuit === 'y') {
         process.exit();
       }
     });
