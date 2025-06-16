@@ -596,7 +596,6 @@ export class Router {
           continue;
         }
 
-        // @ts-ignore URLPattern is temporarily not declared globally by @types/node
         const urlPattern = new URLPattern({
           pathname: route.path,
         });
@@ -624,12 +623,12 @@ export class Router {
               }
             }
 
-            const resolvedParams: string[] = Object.values(paramGroups);
+            const resolvedParams = Object.values(paramGroups);
 
             if (route.middleware) {
               for (const middlewareRef of route.middleware) {
                 const middlewareResult = resolve(middlewareRef).handle(
-                  resolvedParams,
+                  resolvedParams as string[],
                   request,
                 );
 

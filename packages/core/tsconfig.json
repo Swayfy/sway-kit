@@ -2,14 +2,18 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "allowJs": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
     "forceConsistentCasingInFileNames": true,
     "lib": ["dom", "esnext"],
     "module": "esnext",
     "moduleResolution": "bundler",
-    "noEmit": true,
+    "outDir": "types",
     "resolveJsonModule": true,
+    "rootDir": "./src",
     "strict": true,
     "target": "esnext",
     "useUnknownInCatchVariables": true
-  }
+  },
+  "include": ["./src/**/*.ts"]
 }

@@ -1,7 +1,6 @@
 import packageData from './package.json' with { type: 'json' };
 import { builtinModules } from 'node:module';
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
 import swc from 'vite-plugin-swc-transform';
 
 export default defineConfig({
@@ -48,10 +47,6 @@ export default defineConfig({
     },
   },
   plugins: [
-    dts({
-      include: ['./src/**/*.ts'],
-      rollupTypes: true,
-    }),
     swc({
       swcOptions: {
         jsc: {

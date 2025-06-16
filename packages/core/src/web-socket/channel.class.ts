@@ -19,7 +19,6 @@ export abstract class Channel {
 
       const path = `${channel?.[0] === '/' ? '' : '/'}${channel}`;
 
-      // @ts-ignore URLPattern is temporarily not declared globally by @types/node
       const pattern = new URLPattern({
         pathname: path,
       });

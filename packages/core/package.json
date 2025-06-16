@@ -6,58 +6,57 @@
   "exports": {
     ".": {
       "import": "./build/exports.js",
-      "types": "./build/exports.d.ts"
+      "types": "./types/exports.d.ts"
     },
     "./vite": {
       "import": "./build/vite.js",
-      "types": "./build/vite.d.ts"
+      "types": "./types/vite-config-defaults.d.ts"
     },
     "./crypto": {
       "import": "./build/crypto.js",
-      "types": "./build/crypto.d.ts"
+      "types": "./types/crypto/crypto.exports.d.ts"
     },
     "./error": {
       "import": "./build/error.js",
-      "types": "./build/error.d.ts"
+      "types": "./types/error/error.exports.d.ts"
     },
     "./http": {
       "import": "./build/http.js",
-      "types": "./build/http.d.ts"
+      "types": "./types/http/http.exports.d.ts"
     },
     "./injector": {
       "import": "./build/injector.js",
-      "types": "./build/injector.d.ts"
+      "types": "./types/injector/injector.exports.d.ts"
     },
     "./logger": {
       "import": "./build/logger.js",
-      "types": "./build/logger.d.ts"
+      "types": "./types/logger/logger.exports.d.ts"
     },
     "./router": {
       "import": "./build/router.js",
-      "types": "./build/router.d.ts"
+      "types": "./types/router/router.exports.d.ts"
     },
     "./server": {
       "import": "./build/server.js",
-      "types": "./build/server.d.ts"
+      "types": "./types/server/server.exports.d.ts"
     },
     "./state": {
       "import": "./build/state.js",
-      "types": "./build/state.d.ts"
+      "types": "./types/state/state.exports.d.ts"
     },
     "./utils": {
       "import": "./build/utils.js",
-      "types": "./build/utils.d.ts"
+      "types": "./types/utils/utils.exports.d.ts"
     },
     "./view": {
       "import": "./build/view.js",
-      "types": "./build/view.d.ts"
+      "types": "./types/view/view.exports.d.ts"
     },
     "./web-socket": {
       "import": "./build/web-socket.js",
-      "types": "./build/web-socket.d.ts"
+      "types": "./types/web-socket/web-socket.exports.d.ts"
     }
   },
-  "types": "./build/exports.d.ts",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -73,9 +72,9 @@
   "author": "Swayfy",
   "license": "MIT",
   "scripts": {
-    "build": "vite build",
-    "build:dev": "vite build -- --dev",
-    "build:watch": "vite build --watch",
+    "build": "vite build && tsc --build --clean",
+    "build:dev": "vite build -- --dev && tsc --build --clean",
+    "build:watch": "concurrently -r \"vite build -- --dev --watch\" \"tsc --build --clean --watch\"",
     "dev": "build:watch",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit"
@@ -85,10 +84,10 @@
     "@types/formidable": "^3.4.5",
     "@types/node": "^24.0.3",
     "@types/ws": "^8.18.1",
+    "concurrently": "^9.1.2",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
-    "vite-plugin-dts": "^4.5.4",
     "vite-plugin-swc-transform": "^1.1.0"
   },
   "dependencies": {
