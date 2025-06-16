@@ -4,12 +4,10 @@ import path from 'node:path';
 import readline from 'node:readline/promises';
 import util from 'node:util';
 import { pluralize, singularize } from 'inflection';
-import { kebabCase, pascalCase } from 'case-anything';
+import { capitalCase, kebabCase, pascalCase } from 'case-anything';
 import { Command } from '../interfaces/command.interface.ts';
 
-interface Flags {
-  
-}
+interface Flags {}
 
 export class NewCommand implements Command {
   private readonly readlineApi: readline.Interface = readline.createInterface({
@@ -17,19 +15,10 @@ export class NewCommand implements Command {
     output: process.stdout,
   });
 
-  public async handle(
-    flags: Flags,
-    [, type, name]: string[],
-  ): Promise<number> {
+  public async handle(flags: Flags, [, type, name]: string[]): Promise<number> {
     if (!['channel', 'controller', 'module'].includes(type)) {
       throw new Error(`Invalid file type`);
     }
-
-    const splittedFileModule = name.split('/');
-    const directory =
-      splittedFileModule.length > 1
-        ? kebabCase(splittedFileModule[0])
-        : kebabCase(pluralize(splittedFileModule[0]));
 
     if (!name) {
       name =
@@ -38,20 +27,34 @@ export class NewCommand implements Command {
         )) || `empty-${type}`;
     }
 
-    name = singularize(
+    const splittedFileModule = name.split('/');
+
+    name =
       splittedFileModule.length > 1
         ? splittedFileModule[1]
-        : splittedFileModule[0],
-    );
+        : singularize(splittedFileModule[0]);
+
+    const directory = kebabCase(splittedFileModule[0]);
 
     if (!fs.existsSync(path.join('src', directory))) {
       await fsp.mkdir(path.join('src', directory), { recursive: true });
     }
 
+    const filePath = path.join(
+      process.cwd(),
+      'src',
+      directory,
+      `${name}.${type}.ts`,
+    );
+
+    if (fs.existsSync(filePath)) {
+      throw new Error(`${capitalCase(type)} named '${name}' already exists`);
+    }
+
     switch (type) {
       case 'channel': {
         await fsp.writeFile(
-          path.join(process.cwd(), 'src', directory, `${name}.${type}.ts`),
+          filePath,
           `import { Channel, ChannelName } from '@sway-kit/core';
 
 @ChannelName('${kebabCase(pluralize(name))}/:id')
@@ -75,7 +78,7 @@ export class ${pascalCase(name)}Channel extends Channel {
 
       case 'controller': {
         await fsp.writeFile(
-          path.join(process.cwd(), 'src', directory, `${name}.${type}.ts`),
+          filePath,
           `import { Controller, Route } from '@sway-kit/core';
 
 export class ${pascalCase(name)}Controller extends Controller {
@@ -100,7 +103,7 @@ export class ${pascalCase(name)}Controller extends Controller {
 
       case 'module': {
         await fsp.writeFile(
-          path.join(process.cwd(), 'src', directory, `${name}.${type}.ts`),
+          filePath,
           `import { Module } from '@sway-kit/core';
 
 export class ${pascalCase(name)}Module implements Module {
