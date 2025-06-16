@@ -1,6 +1,6 @@
 {
   "name": "@sway-kit/cli",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0-alpha.1",
   "description": "SwayKit command line tool",
   "type": "module",
   "engines": {
@@ -28,7 +28,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^22.15.30",
+    "@types/node": "^24.0.3",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
