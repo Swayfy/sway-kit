@@ -21,7 +21,7 @@ export class NewCommand implements Command {
     flags: Flags,
     [, type, name]: string[],
   ): Promise<number> {
-    if (['channel', 'controller', 'module'].includes(type)) {
+    if (!['channel', 'controller', 'module'].includes(type)) {
       throw new Error(`Invalid file type`);
     }
 
@@ -81,7 +81,7 @@ export class ${pascalCase(name)}Channel extends Channel {
 export class ${pascalCase(name)}Controller extends Controller {
   @Route.Get('/${kebabCase(pluralize(name))}')
   public async index() {
-    return await this.render('${kebabCase(name)}');
+    return await this.render('${kebabCase(pluralize(name))}');
   }
 
   @Route.Get('/${kebabCase(pluralize(name))}/:id')
