@@ -1,6 +1,6 @@
 {
   "name": "@sway-kit/skeleton",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "SwayKit Core backend development framework project skeleton",
   "type": "module",
   "main": "./build/main.js",
@@ -15,7 +15,7 @@
     "tls:generate": "openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj \"/CN=localhost\" && echo 'TLS certificate generated'"
   },
   "dependencies": {
-    "@sway-kit/core": "^1.0.0-alpha.4"
+    "@sway-kit/core": "^1.0.0-alpha.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.28",
