@@ -4,5 +4,6 @@ export class JsonResponse {
   constructor(
     public readonly content: object,
     public readonly statusCode?: HttpStatus,
+    public readonly cookies?: Record<string, string>,
   ) {}
 }

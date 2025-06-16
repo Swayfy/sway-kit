@@ -6,5 +6,6 @@ export class RedirectBackResponse {
   constructor(
     public readonly fallback?: RoutePath | Url,
     public readonly statusCode?: HttpStatus,
+    public readonly cookies?: Record<string, string>,
   ) {}
 }

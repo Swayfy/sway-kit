@@ -7,6 +7,10 @@ import { pluralize, singularize } from 'inflection';
 import { kebabCase, pascalCase } from 'case-anything';
 import { Command } from '../interfaces/command.interface.ts';
 
+interface Flags {
+  
+}
+
 export class NewCommand implements Command {
   private readonly readlineApi: readline.Interface = readline.createInterface({
     input: process.stdin,
@@ -14,7 +18,7 @@ export class NewCommand implements Command {
   });
 
   public async handle(
-    flags: Record<string, unknown>,
+    flags: Flags,
     [, type, name]: string[],
   ): Promise<number> {
     if (['channel', 'controller', 'module'].includes(type)) {

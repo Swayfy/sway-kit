@@ -4,5 +4,6 @@ export class HtmlResponse {
   constructor(
     public readonly content: unknown,
     public readonly statusCode?: HttpStatus,
+    public readonly cookies?: Record<string, string>,
   ) {}
 }

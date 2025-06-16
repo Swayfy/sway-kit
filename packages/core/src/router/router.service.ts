@@ -166,10 +166,11 @@ export class Router {
     };
 
     const {
+      additionalCookies,
+      additionalHeaders,
       body: parsedBody,
       contentType,
       statusCode: finalStatusCode,
-      additionalHeaders,
     } = await this.parseResponseBody(request, body);
 
     const baseHeaders = {
@@ -199,7 +200,10 @@ export class Router {
         : (finalStatusCode ?? statusCode),
     );
 
-    for (const [cookie, cookieValue] of Object.entries(cookies)) {
+    for (const [cookie, cookieValue] of Object.entries({
+      ...cookies,
+      ...additionalCookies,
+    })) {
       response.headers.append(
         'set-cookie',
         `${cookie}=${cookieValue}; SameSite=Lax; Max-Age=${
@@ -240,13 +244,16 @@ export class Router {
     body: unknown,
     statusCode?: HttpStatus,
   ): Promise<{
+    additionalCookies: Record<string, string>;
+    additionalHeaders: Record<string, string>;
     body: string | null | Uint8Array;
     contentType: ContentType;
     statusCode?: HttpStatus;
-    additionalHeaders: Record<string, string>;
   }> {
-    let contentType: ContentType = 'text/html';
+    let additionalCookies: Record<string, string> = {};
     let additionalHeaders: Record<string, string> = {};
+
+    let contentType: ContentType = 'text/html';
 
     if (body instanceof Promise) {
       body = await body;
@@ -292,6 +299,8 @@ export class Router {
             statusCode = body.statusCode;
           }
 
+          additionalCookies = { ...additionalCookies, ...body.cookies };
+
           body = JSON.stringify(body.content);
           contentType = 'application/octet-stream';
 
@@ -302,6 +311,8 @@ export class Router {
           if (body.statusCode) {
             statusCode = body.statusCode;
           }
+
+          additionalCookies = { ...additionalCookies, ...body.cookies };
 
           body = String(body.content);
           contentType = 'text/html';
@@ -314,6 +325,8 @@ export class Router {
             statusCode = body.statusCode;
           }
 
+          additionalCookies = { ...additionalCookies, ...body.cookies };
+
           body = JSON.stringify(body.content);
           contentType = 'application/json';
 
@@ -322,6 +335,8 @@ export class Router {
 
         case body instanceof RedirectBackResponse: {
           statusCode = body.statusCode ?? HttpStatus.Found;
+
+          additionalCookies = { ...additionalCookies, ...body.cookies };
 
           const fallback = body.fallback ?? '/';
           const referrer = request.header('referer');
@@ -340,6 +355,8 @@ export class Router {
         case body instanceof RedirectResponse: {
           statusCode = body.statusCode ?? HttpStatus.Found;
 
+          additionalCookies = { ...additionalCookies, ...body.cookies };
+
           const destination = (body as RedirectResponse).destination;
 
           additionalHeaders['location'] = this.urlRegexp.test(destination)
@@ -353,6 +370,8 @@ export class Router {
           if (body.statusCode) {
             statusCode = body.statusCode;
           }
+
+          additionalCookies = { ...additionalCookies, ...body.cookies };
 
           await body.assertFileExists();
 
@@ -390,10 +409,11 @@ export class Router {
     }
 
     return {
+      additionalCookies,
+      additionalHeaders,
       body: body as string | null | Uint8Array,
       contentType,
       statusCode,
-      additionalHeaders,
     };
   }
 

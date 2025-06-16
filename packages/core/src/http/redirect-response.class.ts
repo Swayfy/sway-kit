@@ -6,5 +6,6 @@ export class RedirectResponse {
   constructor(
     public readonly destination: RoutePath | Url,
     public readonly statusCode?: HttpStatus,
+    public readonly cookies?: Record<string, string>,
   ) {}
 }

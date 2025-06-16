@@ -9,6 +9,7 @@ export class ViewResponse {
     public readonly view: string,
     public readonly data: Record<string, unknown> = {},
     public readonly statusCode?: HttpStatus,
+    public readonly cookies?: Record<string, string>,
   ) {
     this.file = view.startsWith('@')
       ? path.join(`${this.view.slice(1).replaceAll(/[/\\]/g, path.sep)}.html`)

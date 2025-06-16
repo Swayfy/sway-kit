@@ -5,5 +5,6 @@ export class DownloadResponse {
     public readonly content: string | Buffer | Uint8Array,
     public readonly filename: string,
     public readonly statusCode?: HttpStatus,
+    public readonly cookies?: Record<string, string>,
   ) {}
 }
