@@ -72,9 +72,8 @@
   "author": "Swayfy",
   "license": "MIT",
   "scripts": {
-    "build": "vite build && tsc --build --clean",
-    "build:dev": "vite build -- --dev && tsc --build --clean",
-    "build:watch": "concurrently -r \"vite build -- --dev --watch\" \"tsc --build --clean --watch\"",
+    "build": "vite build && tsc",
+    "build:watch": "concurrently -r \"vite build -- --dev --watch\" \"tsc --watch\"",
     "dev": "build:watch",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit"

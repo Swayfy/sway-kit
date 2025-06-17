@@ -12,22 +12,17 @@ export default defineConfig({
       entry: {
         exports: './src/exports.ts',
         vite: './src/vite-config-defaults.ts',
-
-        ...(process.argv[4] === '--dev'
-          ? {}
-          : {
-              crypto: './src/crypto/crypto.exports.ts',
-              error: './src/error/error.exports.ts',
-              http: './src/http/http.exports.ts',
-              injector: './src/injector/injector.exports.ts',
-              logger: './src/logger/logger.exports.ts',
-              router: './src/router/router.exports.ts',
-              server: './src/server/server.exports.ts',
-              state: './src/state/state.exports.ts',
-              utils: './src/utils/utils.exports.ts',
-              view: './src/view/view.exports.ts',
-              'web-socket': './src/web-socket/web-socket.exports.ts',
-            }),
+        crypto: './src/crypto/crypto.exports.ts',
+        error: './src/error/error.exports.ts',
+        http: './src/http/http.exports.ts',
+        injector: './src/injector/injector.exports.ts',
+        logger: './src/logger/logger.exports.ts',
+        router: './src/router/router.exports.ts',
+        server: './src/server/server.exports.ts',
+        state: './src/state/state.exports.ts',
+        utils: './src/utils/utils.exports.ts',
+        view: './src/view/view.exports.ts',
+        'web-socket': './src/web-socket/web-socket.exports.ts',
       },
       formats: ['es'],
     },
